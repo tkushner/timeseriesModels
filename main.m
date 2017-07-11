@@ -6,7 +6,6 @@ allfiles=dir('../outputs/byPatient/session-PSO3-001-*');
 %how many are there
 numfiles=size(allfiles);
 MAX=657;
-%%
 
 %Initialize patient struct for speed
 patient(MAX).SessionID=[];
