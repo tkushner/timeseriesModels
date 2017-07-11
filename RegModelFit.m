@@ -32,12 +32,14 @@ for i=1:MAX;
             n=n+1;
         end
         %Find first zero entry (to overcome fact that you cannot initialize empty matrix)
-        tENDfits=min(find(modelFits(i).Fits==[0,0,0]));
+        tENDfits=min(find(modelFits(i).Fits==[0,0,0]))-1;
         %look at means & std dev for each parameter
         modelFits(i).mean=mean(modelFits(i).Fits(1:tENDfits,1:3));
         modelFits(i).stdev=std(modelFits(i).Fits(1:tENDfits,1:3));
         modelFits(i).RESmean=mean(modelFits(i).RES(1:tENDfits));
         modelFits(i).RESstdev=std(modelFits(i).RES(1:tENDfits));
+        modelFits(i).RESmin=min(modelFits(i).RES(1:tENDfits));
+
     elseif sum(diff(patient(i).gtimes)~=5)==1
         n=1;
         tEND1=find(diff(patient(i).gtimes)~=5)-delta;
@@ -62,12 +64,13 @@ for i=1:MAX;
             end
         end
         %Find first zero entry (to overcome fact that you cannot initialize empty matrix)
-        tENDfits=min(find(modelFits(i).Fits==[0,0,0]));
+        tENDfits=min(find(modelFits(i).Fits==[0,0,0]))-1;
         %look at means & std dev for each parameter
         modelFits(i).mean=mean(modelFits(i).Fits(1:tENDfits,1:3));
         modelFits(i).stdev=std(modelFits(i).Fits(1:tENDfits,1:3));
         modelFits(i).RESmean=mean(modelFits(i).RES(1:tENDfits));
         modelFits(i).RESstdev=std(modelFits(i).RES(1:tENDfits));
+        modelFits(i).RESmin=min(modelFits(i).RES(1:tENDfits));
     else continue
     end
     
@@ -78,7 +81,7 @@ stats.mean=nanmean(MEAN);
 stats.stdev=nanstd(MEAN);
 stats.RESmean=nanmean(RESMEAN);
 stats.RESstdev=nanstd(RESMEAN);
-stats.RESmax=max(max(padcat(modelFits(1:end).RES(1:tENDfits))));
-stats.RESmin=min(min(padcat(modelFits(1:end).RES(1:tENDfits))));
+stats.RESmax=max(max(padcat(modelFits(1:end).RES)));
+stats.RESmin=min(min(padcat(modelFits(1:end).RESmin)));
 stats.RES95=1.96*stats.RESstdev;
 end
