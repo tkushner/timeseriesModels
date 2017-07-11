@@ -24,16 +24,17 @@ for i=1:MAX
     [patient(i).SessionID,patient(i).datetime,patient(i).CGM,patient(i).IOB,patient(i).Bolus,patient(i).BkgInsulin] = ...
         importCGMDATA(strcat('../outputs/byPatient/',allfiles(i).name));
     
-    patient(i).times=datenum(patient(i).datetime);
-    %scaling step=5min timescale - same for all
-    step=patient(i).times(3)-patient(i).times(2);
+    formatin='HH:MM:SS mm/dd/yyyy';
+    patient(i).times=datenum(patient(i).datetime,formatin);
     %rescale times based on start time
     patient(i).times=patient(i).times-patient(i).times(1);
-    patient(i).times=patient(i).times./step*5;
+    %get timestep - keep 5min intervals (5min~.0035)
+    step=diff(patient(i).times);
+    patient(i).times=patient(i).times./step(2)*5;
     
     %pull only times after first 180min burn-in
     gindex=find((patient(i).times>=180)-ismissing(patient(i).IOB));
-    patient(i).gtimes=patient(i).times(gindex);
+    patient(i).gtimes=round(patient(i).times(gindex));
     patient(i).gCGM=patient(i).CGM(gindex);
     patient(i).gIOB=patient(i).IOB(gindex);
     
