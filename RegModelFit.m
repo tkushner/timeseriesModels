@@ -15,15 +15,25 @@ modelFits(MAX).mean=[];
 modelFits(MAX).stdev=[];
 modelFits(MAX).RESmean=[];
 modelFits(MAX).RESstdev=[];
+modelFits(MAX).RESmin=[];
 
 for i=1:MAX;
-    %only use the trial if there is no drop-out
-    if mod(sum(patient(i).gtimes),5)==0
-        % if (abs(sum(patient(i).gtimes(2:end)-patient(i).gtimes(1:end-1))-5*length(patient(i).gtimes))<=5)
-        n=1;
         tEND=length(patient(i).gCGM)-delta;
         modelFits(i).Fits=zeros(tEND,3);
         modelFits(i).RES=zeros(tEND,1);
+end
+
+parfor i=1:MAX;
+    %only use the trial if there is no drop-out
+        tEND=length(patient(i).gCGM)-delta;
+%         modelFits(i).Fits=zeros(tEND,3);
+%         modelFits(i).RES=zeros(tEND,1);
+    if mod(sum(patient(i).gtimes),5)==0 && max(diff(patient(i).gtimes)==5)
+        % if (abs(sum(patient(i).gtimes(2:end)-patient(i).gtimes(1:end-1))-5*length(patient(i).gtimes))<=5)
+        n=1;
+%          tEND=length(patient(i).gCGM)-delta;
+%         modelFits(i).Fits=zeros(tEND,3);
+%         modelFits(i).RES=zeros(tEND,1);
         for t=delta:tEND-1
             fun=@(a)(a(1)*patient(i).gCGM(t-gDelta)+a(2)*patient(i).gCGM(t)+a(3)*patient(i).gIOB(t-iDelta)-patient(i).gCGM(t+gDelta))^2;
             [a,Res]=fmincon(fun,a0,[],[],[],[],lb,ub);
@@ -42,10 +52,11 @@ for i=1:MAX;
 
     elseif sum(diff(patient(i).gtimes)~=5)==1
         n=1;
-        tEND1=find(diff(patient(i).gtimes)~=5)-delta;
+        SWITCH=find(diff(patient(i).gtimes)~=5);
+        tEND1=SWITCH-delta;
         tEND2=length(patient(i).gCGM)-delta;
-        modelFits(i).Fits=zeros(tEND,3);
-        modelFits(i).RES=zeros(tEND,1);
+%         modelFits(i).Fits=zeros(tEND,3);
+%         modelFits(i).RES=zeros(tEND,1);
         if tEND1-1>delta
             for t=delta:tEND1-1
                 fun=@(a)(a(1)*patient(i).gCGM(t-gDelta)+a(2)*patient(i).gCGM(t)+a(3)*patient(i).gIOB(t-iDelta)-patient(i).gCGM(t+gDelta))^2;
@@ -54,8 +65,15 @@ for i=1:MAX;
                 modelFits(i).RES(n)=sqrt(Res);
                 n=n+1;
             end
+            for t=SWITCH+delta+1:tEND2-1
+                fun=@(a)(a(1)*patient(i).gCGM(t-gDelta)+a(2)*patient(i).gCGM(t)+a(3)*patient(i).gIOB(t-iDelta)-patient(i).gCGM(t+gDelta))^2;
+                [a,Res]=fmincon(fun,a0,[],[],[],[],lb,ub);
+                modelFits(i).Fits(n,:)=a;
+                modelFits(i).RES(n)=sqrt(Res);
+                n=n+1;
+            end
         else
-            for t=tEND1+delta:tEND2-1
+            for t=SWITCH+delta+1:tEND2-1
                 fun=@(a)(a(1)*patient(i).gCGM(t-gDelta)+a(2)*patient(i).gCGM(t)+a(3)*patient(i).gIOB(t-iDelta)-patient(i).gCGM(t+gDelta))^2;
                 [a,Res]=fmincon(fun,a0,[],[],[],[],lb,ub);
                 modelFits(i).Fits(n,:)=a;
@@ -73,7 +91,6 @@ for i=1:MAX;
         modelFits(i).RESmin=min(modelFits(i).RES(1:tENDfits));
     else continue
     end
-    
 end
 [MEAN]=padcat(modelFits(1:end).mean);
 [RESMEAN]=padcat(modelFits(1:end).RESmean);

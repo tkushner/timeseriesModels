@@ -19,7 +19,8 @@ patient(MAX).gtimes=[];
 patient(MAX).gCGM=[];
 patient(MAX).gIOB=[];
 
-for i=1:MAX
+tic
+parfor i=1:MAX
     [patient(i).SessionID,patient(i).datetime,patient(i).CGM,patient(i).IOB,patient(i).Bolus,patient(i).BkgInsulin] = ...
         importCGMDATA(strcat('../outputs/byPatient/',allfiles(i).name));
     
@@ -38,6 +39,7 @@ for i=1:MAX
     patient(i).gIOB=patient(i).IOB(gindex);
     
 end
+toc
 
 %% minimize least squares for 30min
 a0=[.8 .2 -.4]; 
@@ -47,7 +49,9 @@ gDelta=6;
 iDelta=6;
 delta=max(gDelta,iDelta)+1;
 
+tic
 [modelFits30min, stats30min]=RegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
+toc
 %% minimize least squares for 45min
 a0=[2 1 -10]; 
 lb = [0 0 -30];
