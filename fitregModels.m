@@ -2,7 +2,7 @@
 %compiled fits to pull function instead of all together
 
 %pull all files for given patient
-allfiles=dir('./outputs/byPatient/session-PSO3-001-*');
+allfiles=dir('../outputs/byPatient/session-PSO3-001-*');
 %how many are there
 numfiles=size(allfiles);
 MAX=657;
@@ -22,7 +22,7 @@ patient(MAX).gIOB=[];
 
 for i=1:MAX
     [patient(i).SessionID,patient(i).datetime,patient(i).CGM,patient(i).IOB,patient(i).Bolus,patient(i).BkgInsulin] = ...
-        importCGMDATA(strcat('./Outputs/byPatient/',allfiles(i).name));
+        importCGMDATA(strcat('../outputs/byPatient/',allfiles(i).name));
     
     patient(i).times=datenum(patient(i).datetime);
     %scaling step=5min timescale - same for all
