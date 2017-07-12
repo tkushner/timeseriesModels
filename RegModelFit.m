@@ -24,16 +24,11 @@ for i=1:MAX;
 end
 
 parfor i=1:MAX;
-    %only use the trial if there is no drop-out
-        tEND=length(patient(i).gCGM)-delta;
-%         modelFits(i).Fits=zeros(tEND,3);
-%         modelFits(i).RES=zeros(tEND,1);
-    if mod(sum(patient(i).gtimes),5)==0 && max(diff(patient(i).gtimes)==5)
-        % if (abs(sum(patient(i).gtimes(2:end)-patient(i).gtimes(1:end-1))-5*length(patient(i).gtimes))<=5)
+    
+    tEND=length(patient(i).gCGM)-delta;
+    %check for trials with no errors (drop out/ extra points / etc)
+    if min(diff(patient(i).gtimes))==5 && max(diff(patient(i).gtimes)==5)
         n=1;
-%          tEND=length(patient(i).gCGM)-delta;
-%         modelFits(i).Fits=zeros(tEND,3);
-%         modelFits(i).RES=zeros(tEND,1);
         for t=delta:tEND-1
             fun=@(a)(a(1)*patient(i).gCGM(t-gDelta)+a(2)*patient(i).gCGM(t)+a(3)*patient(i).gIOB(t-iDelta)-patient(i).gCGM(t+gDelta))^2;
             [a,Res]=fmincon(fun,a0,[],[],[],[],lb,ub);
@@ -55,17 +50,15 @@ parfor i=1:MAX;
         SWITCH=find(diff(patient(i).gtimes)~=5);
         tEND1=SWITCH-delta;
         tEND2=length(patient(i).gCGM)-delta;
-%         modelFits(i).Fits=zeros(tEND,3);
-%         modelFits(i).RES=zeros(tEND,1);
-        if tEND1-1>delta
-            for t=delta:tEND1-1
+        if (tEND1-1)>delta
+            for t=delta:(tEND1-1)
                 fun=@(a)(a(1)*patient(i).gCGM(t-gDelta)+a(2)*patient(i).gCGM(t)+a(3)*patient(i).gIOB(t-iDelta)-patient(i).gCGM(t+gDelta))^2;
                 [a,Res]=fmincon(fun,a0,[],[],[],[],lb,ub);
                 modelFits(i).Fits(n,:)=a;
                 modelFits(i).RES(n)=sqrt(Res);
                 n=n+1;
             end
-            for t=SWITCH+delta+1:tEND2-1
+            for t=(SWITCH+delta+1):(tEND2-1)
                 fun=@(a)(a(1)*patient(i).gCGM(t-gDelta)+a(2)*patient(i).gCGM(t)+a(3)*patient(i).gIOB(t-iDelta)-patient(i).gCGM(t+gDelta))^2;
                 [a,Res]=fmincon(fun,a0,[],[],[],[],lb,ub);
                 modelFits(i).Fits(n,:)=a;
@@ -73,6 +66,7 @@ parfor i=1:MAX;
                 n=n+1;
             end
         else
+            n=SWITCH;
             for t=SWITCH+delta+1:tEND2-1
                 fun=@(a)(a(1)*patient(i).gCGM(t-gDelta)+a(2)*patient(i).gCGM(t)+a(3)*patient(i).gIOB(t-iDelta)-patient(i).gCGM(t+gDelta))^2;
                 [a,Res]=fmincon(fun,a0,[],[],[],[],lb,ub);
@@ -90,6 +84,10 @@ parfor i=1:MAX;
         modelFits(i).RESstdev=std(modelFits(i).RES(1:tENDfits));
         modelFits(i).RESmin=min(modelFits(i).RES(1:tENDfits));
     else continue
+    end
+    %check if empty then set as NaN (else issues with padcat)
+    if isempty(modelFits(i).RESmin)
+        modelFits(i).RESmin=NaN(1)
     end
 end
 [MEAN]=padcat(modelFits(1:end).mean);

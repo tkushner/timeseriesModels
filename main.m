@@ -5,7 +5,7 @@
 allfiles=dir('../outputs/byPatient/session-PSO3-001-*');
 %how many are there
 numfiles=size(allfiles);
-MAX=657;
+MAX=20;
 
 %Initialize patient struct for speed
 patient(MAX).SessionID=[];
@@ -44,57 +44,55 @@ toc
 %% minimize least squares for 30min
 a0=[.8 .2 -.4]; 
 lb = [0 0 -5];
-ub=[1 2 0];
+ub=[4 4 0];
 gDelta=6;
 iDelta=6;
-delta=max(gDelta,iDelta)+1;
-
 tic
 [modelFits30min, stats30min]=RegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
 toc
 %% minimize least squares for 45min
 a0=[2 1 -10]; 
 lb = [0 0 -30];
-ub=[1 2 0];
+ub=[4 4 0];
 gDelta=9;
 iDelta=9;
-delta=max(gDelta,iDelta)+1;
-
+tic
 [modelFits45min, stats45min]=RegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
+toc
 %% minimize least squares for 60min
 a0=[2 1 -10]; 
 lb = [0 0 -30];
-ub=[2 2 0];
+ub=[4 4 0];
 gDelta=12;
 iDelta=12;
-delta=max(gDelta,iDelta)+1;
-
+tic
 [modelFits60min, stats60min]=RegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
-
-%%120min
+toc
+%% 120min
 a0=[2 1 -10]; 
 lb = [0 0 -50];
-ub=[2 2 0];
+ub=[4 4 0];
 gDelta=24;
 iDelta=24;
-delta=max(gDelta,iDelta)+1;
+tic
 [modelFits120min, stats120min]=RegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
+toc
 
-
-%%mixed 120 & 45
+%% mixed 120 & 45
 a0=[2 1 -10]; 
 lb = [0 0 -30];
-ub=[2 2 0];
+ub=[4 4 0];
 gDelta=24;
 iDelta=9;
-delta=max(gDelta,iDelta)+1;
+tic
 [modelFitsG120I45min, statsG120I45min]=RegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
-
+toc
 %mixed 60 & 45
 a0=[2 1 -10]; 
 lb = [0 0 -30];
-ub=[2 2 0];
+ub=[4 4 0];
 gDelta=12;
 iDelta=9;
-delta=max(gDelta,iDelta)+1;
+tic
 [modelFitsG60I45min, statsG60I45min]=RegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
+toc
