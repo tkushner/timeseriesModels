@@ -400,7 +400,7 @@ end
 %% GLOBAL OPTIMIZATION this is so much faster omg
 %% minimize least squares for 30min
 MAX=380;
-a0=[.2 .8 -2.5];
+a0=[.5 .5 -2.5];
 lb = [0 0 -10];
 ub=[4 4 0];
 gDelta=6;
@@ -409,6 +409,25 @@ tic
 [GlobmodelFits30min, Globstats30min]=GlobalRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
 toc
 
+for i=ID
+    tEND=length(patient(i).gtimes);
+    if GlobmodelFits30min(i).RES >0 && ~isnan(GlobmodelFits30min(i).RES)
+        GlobmodelFits30min(i).predict=[patient(i).gCGM(1:(delta+gDelta-1))' (GlobmodelFits30min(i).Fits(1)*patient(i).gCGM((delta-gDelta):(end-2*gDelta))+ ...
+            GlobmodelFits30min(i).Fits(2)*patient(i).gCGM(delta:(end-gDelta))+ ...
+            GlobmodelFits30min(i).Fits(3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta)))']';
+        
+        GlobmodelFits30min(i).indivRes=abs(GlobmodelFits30min(i).predict-patient(i).gCGM);
+    else
+        GlobmodelFits30min(i).indivRes=0;
+    end
+end
+
+Globstats30min.indivRes=vertcat(GlobmodelFits30min(1:end).indivRes);
+Globstats30min.irMean=nanmean(Globstats30min.indivRes(Globstats30min.indivRes>0));
+Globstats30min.irStdev=nanstd(Globstats30min.indivRes(Globstats30min.indivRes>0));
+Globstats30min.irMin=min(Globstats30min.indivRes(Globstats30min.indivRes>0));
+Globstats30min.irMax=max(Globstats30min.indivRes(Globstats30min.indivRes>0));
+Globstats30min.ir95=1.96*Globstats30min.irStdev;
 %% minimize least squares for 45min
 a0=[2 1 -10];
 lb = [0 0 -50];
@@ -455,7 +474,7 @@ for i=ID
         GlobmodelFits30min(i).indivRes=0;
     end
 end
-
+%%
 gDelta=9;
 iDelta=9;
 delta=max(gDelta,iDelta)+1;
@@ -540,7 +559,7 @@ subplot(2,1,2)
 hist(GlobmodelFits30min(i).predict(13:end)-patient(i).gCGM(13:end),200)
 title('Residuals 30min Global')
 end
-%%
+%% calculate stats for residuals of global fit model
 
 Globstats30min.indivRes=vertcat(GlobmodelFits30min(1:end).indivRes);
 Globstats30min.irMean=nanmean(Globstats30min.indivRes(Globstats30min.indivRes>0));
@@ -570,4 +589,75 @@ Globstats120min.irMin=min(Globstats120min.indivRes(Globstats120min.indivRes>0));
 Globstats120min.irMax=max(Globstats120min.indivRes(Globstats120min.indivRes>0));
 Globstats120min.ir95=1.96*Globstats120min.irStdev;
 
+%% sensitivity analysis
+i=1;
+%construct object for numeric parameter that can take specified values in
+%distribution
+a1 = param.Continuous('a1',GlobmodelFits30min(i).Fits(1));
+a2 = param.Continuous('a2',GlobmodelFits30min(i).Fits(2));
+a3 = param.Continuous('a3',abs(GlobmodelFits30min(i).Fits(3)));
 
+%create pdR to configure param space
+x1 = [0.95 0.99 1.01 1.05]*a1.Value;
+x2 = [0.95 0.99 1.01 1.05]*a2.Value;   
+x3 = [0.95 0.99 1.01 1.05]*a3.Value;  
+F = [0 0.5 0.5 1];
+%piecewise linear distrib with hole in 1% range (bc 1% gets thrown out
+%anyway)
+% pdR1 = makedist('PiecewiseLinear','x',x1,'Fx',F);
+% pdR2 = makedist('PiecewiseLinear','x',x2,'Fx',F);
+% pdR3 = makedist('PiecewiseLinear','x',x3,'Fx',F);
+
+%make normal distrib using parameters
+pdR1 = makedist('Normal','mu',Globstats30min.mean(1),'sigma',Globstats30min.stdev(1));
+pdR2 = makedist('Normal','mu',Globstats30min.mean(2),'sigma',Globstats30min.stdev(2));
+pdR3 = makedist('Normal','mu',Globstats30min.mean(3),'sigma',Globstats30min.stdev(3));
+
+% x1 = linspace(0.9*a1.Value,1.1*a1.Value,1e3);
+% x2 = linspace(0.9*a2.Value,1.1*a2.Value,1e3);
+% x3 = linspace(0.9*a3.Value,1.1*a3.Value,1e3);
+
+x1=linspace(Globstats30min.mean(1)-3*Globstats30min.stdev(1),Globstats30min.mean(1)+3*Globstats30min.stdev(1));
+x2=linspace(Globstats30min.mean(2)-3*Globstats30min.stdev(2),Globstats30min.mean(2)+3*Globstats30min.stdev(2));
+x3=linspace(Globstats30min.mean(3)-3*Globstats30min.stdev(3),Globstats30min.mean(3)+3*Globstats30min.stdev(3));
+
+figure(1)
+subplot(3,1,1)
+plot(x1,pdf(pdR1,x1));
+subplot(3,1,2)
+plot(x2,pdf(pdR2,x2));
+subplot(3,1,3)
+plot(x3,pdf(pdR3,x3));
+%all this shit to add title to the top of subplots
+set(gcf,'NextPlot','add');
+axes;
+h = title('Parameter distributions');
+set(gca,'Visible','off');
+set(h,'Visible','on');
+
+%specify pdR as prob dist for a1 param in sdo.paramspace
+ps1=sdo.ParameterSpace(a1,pdR1);
+ps2=sdo.ParameterSpace(a2,pdR2);
+ps3=sdo.ParameterSpace(a3,pdR3);
+
+%generate samples
+Ns=1000;
+X1=sdo.sample(ps1,Ns);
+X2=sdo.sample(ps2,Ns);
+X3=sdo.sample(ps3,Ns);
+
+
+%plot samples
+figure(2)
+subplot(2,2,1)
+sdo.scatterPlot(X1,X2)
+subplot(2,2,2)
+sdo.scatterPlot(X2,X3)
+subplot(2,2,3)
+sdo.scatterPlot(X1,X3)
+%title
+set(gcf,'NextPlot','add');
+axes;
+h = title('Parameter combinations');
+set(gca,'Visible','off');
+set(h,'Visible','on');
