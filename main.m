@@ -598,25 +598,10 @@ a1 = param.Continuous('a1',GlobmodelFits30min(i).Fits(1));
 a2 = param.Continuous('a2',GlobmodelFits30min(i).Fits(2));
 a3 = param.Continuous('a3',abs(GlobmodelFits30min(i).Fits(3)));
 
-%create pdR to configure param space
-x1 = [0.95 0.99 1.01 1.05]*a1.Value;
-x2 = [0.95 0.99 1.01 1.05]*a2.Value;   
-x3 = [0.95 0.99 1.01 1.05]*a3.Value;  
-F = [0 0.5 0.5 1];
-%piecewise linear distrib with hole in 1% range (bc 1% gets thrown out
-%anyway)
-% pdR1 = makedist('PiecewiseLinear','x',x1,'Fx',F);
-% pdR2 = makedist('PiecewiseLinear','x',x2,'Fx',F);
-% pdR3 = makedist('PiecewiseLinear','x',x3,'Fx',F);
-
 %make normal distrib using parameters
 pdR1 = makedist('Normal','mu',Globstats30min.mean(1),'sigma',Globstats30min.stdev(1));
 pdR2 = makedist('Normal','mu',Globstats30min.mean(2),'sigma',Globstats30min.stdev(2));
 pdR3 = makedist('Normal','mu',Globstats30min.mean(3),'sigma',Globstats30min.stdev(3));
-
-% x1 = linspace(0.9*a1.Value,1.1*a1.Value,1e3);
-% x2 = linspace(0.9*a2.Value,1.1*a2.Value,1e3);
-% x3 = linspace(0.9*a3.Value,1.1*a3.Value,1e3);
 
 x1=linspace(Globstats30min.mean(1)-3*Globstats30min.stdev(1),Globstats30min.mean(1)+3*Globstats30min.stdev(1));
 x2=linspace(Globstats30min.mean(2)-3*Globstats30min.stdev(2),Globstats30min.mean(2)+3*Globstats30min.stdev(2));
@@ -696,3 +681,5 @@ scatter3(dist30(vC,1),dist30(vC,2),dist30(vC,3),.01.*[Sens30.RES],.01.*[Sens30.R
 xlabel('a(1)')
 ylabel('a(2)')
 zlabel('a(3)')
+
+%backparse to get how much change in each param affects output
