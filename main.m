@@ -47,16 +47,16 @@ parfor i=1:MAX
 end
 toc
 
-% %% minimize least squares for 30min
-% a0=[.8 .2 -.4];
-% lb = [0 0 -5];
-% ub=[4 4 0];
-% gDelta=6;
-% iDelta=6;
-% tic
-% [modelFits30min, stats30min]=RegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
-% toc
-% 
+%% minimize least squares for 30min
+a0=[.8 .2 -.4];
+lb = [0 0 -5];
+ub=[2 2 0];
+gDelta=6;
+iDelta=6;
+tic
+[modelFits30min, stats30min]=RegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
+toc
+
 % %% minimize least squares for 45min
 % a0=[2 1 -10];
 % lb = [0 0 -30];

@@ -17,7 +17,7 @@ for i = 1:MAX
             a(2)*patient(i).gCGM(delta:(end-gDelta))+a(3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta)))).^2));
         [a,Res]=fmincon(fun,a0,[],[],[],[],lb,ub);
         modelFits(i).Fits=a;
-        modelFits(i).RES=sqrt(Res);          
+        modelFits(i).RES=sqrt(Res)\length(patient(i).gCGM(tBEG:end));          
     else
         continue
     end
