@@ -1,12 +1,15 @@
 %optimize across windows within each trial using nls instead of fmincon
-function [modelFits, stats] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX)
+%currently it only works for gDelta=iDelta
+%Taisa Kushner 18 July 2017
 
-a0=[.5 .5 -2.5];
-lb = [0 0 -10];
-ub=[2 2 -1];
-gDelta=6;
-iDelta=6;
-MAX=30;
+function [modelFits, stats] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp)
+
+% a0=[.5 .5 -2.5];
+% lb = [0 0 -10];
+% ub=[2 2 -1];
+% gDelta=6;
+% iDelta=6;
+% MAX=30;
 
 delta=max(gDelta,iDelta)+1;
 
@@ -23,8 +26,8 @@ modelFits(MAX).STD=[];
 
 %define windows for parsing & overlap (default: 300min (60 steps), 25min
 %overlap (5)
-stepsz= 20;
-ovlp = 5;
+% stepsz= 20;
+% ovlp = 5;
 step=stepsz-ovlp;
 
 for i = 1:MAX
@@ -36,7 +39,7 @@ for i = 1:MAX
     modelFits(i).numwin=Nw;
     
     %check no drop out or double cgm readings
-    if min(diff(patient(i).gtimes))==5 && max(diff(patient(i).gtimes)==5)
+    if (max(diff(patient(i).gtimes))==5 & min(diff(patient(i).gtimes)==5) & length(patient(i).gtimes)>stepsz)
         %check at least one window
         if Nw>0
             %construct matrix of windows
@@ -59,7 +62,8 @@ for i = 1:MAX
                 %construct matrix
                 B=[CGM(delta+gDelta:end,j);1];
                 A=[CGM(1:end-2*gDelta,j), CGM(gDelta+1:end-gDelta,j), IOB(1:end-2*iDelta,j);[1,1,0]];
-                options = optimoptions('lsqlin','Algorithm','interior-point');
+
+                options = optimoptions('lsqlin','Algorithm','interior-point','display','off');
                 [x, resnorm, residual, exitflag, output, lambda]=lsqlin(A,B,[],[],[],[],lb,ub,a0,options);
                 modelFits(i).Fits(j,:)=x;
                 modelFits(i).RES=residual;
@@ -79,10 +83,10 @@ for i = 1:MAX
         else
             continue
         end
-        
     else
         continue
     end
+    
 end
 for i=1:length(modelFits)
     %check if empty
@@ -101,6 +105,10 @@ stats.RESstdev=nanstd(RESES);
 stats.RESmax=max(RESES);
 stats.RESmin=min(RESES);
 stats.RES95=1.96*stats.RESstdev;
+stats.AbsMIN=min(abs(RESES));
+stats.AbsMEAN=nanmean(abs(RESES));
+stats.AbsSTD=nanstd(abs(RESES));
+stats.Abs95=1.96*stats.AbsSTD;
 end
 
 

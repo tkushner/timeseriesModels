@@ -6,7 +6,7 @@
 allfiles=dir('../outputs/byPatient/session-PSO3-001-*');
 %how many are there
 numfiles=size(allfiles);
-MAX=300;
+MAX=657;
 
 %Initialize patient struct for speed
 patient(MAX).SessionID=[];
@@ -590,6 +590,96 @@ Globstats120min.irMin=min(Globstats120min.indivRes(Globstats120min.indivRes>0));
 Globstats120min.irMax=max(Globstats120min.indivRes(Globstats120min.indivRes>0));
 Globstats120min.ir95=1.96*Globstats120min.irStdev;
 
+%% Optimization by window
+tic 
+
+a0=[.5 .5 -2.5];
+lb = [0 0 -10];
+ub=[4 4 0];
+gDelta=6;
+iDelta=6;
+stepsz=20;
+ovlp=5;
+
+[modelFits30Win20, stats30Win20] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+
+
+stepsz=40;
+ovlp=5;
+[modelFits30Win40, stats30Win40] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+
+stepsz=60;
+ovlp=5;
+[modelFits30Win60, stats30Win60] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+
+
+% 45min
+
+a0=[2 1 -10];
+lb = [0 0 -50];
+ub=[2 2 0];
+gDelta=9;
+iDelta=9;
+
+stepsz=20;
+ovlp=5;
+[modelFits45Win20, stats45Win20] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+
+
+stepsz=40;
+ovlp=5;
+[modelFits45Win40, stats45Win40] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+
+
+stepsz=60;
+ovlp=5;
+[modelFits45Win60, stats45Win60] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+
+
+% 60min
+
+a0=[2 1 -10];
+lb = [0 0 -50];
+ub=[4 4 0];
+gDelta=12;
+iDelta=12;
+
+stepsz=20;
+ovlp=5;
+[modelFits60Win20, stats60Win20] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+
+
+stepsz=40;
+ovlp=5;
+[modelFits60Win40, stats60Win40] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+
+
+stepsz=60;
+ovlp=5;
+[modelFits60Win60, stats60Win60] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+
+%120min
+
+a0=[2 1 -10];
+lb = [0 0 -50];
+ub=[4 4 0];
+gDelta=24;
+iDelta=24;
+stepsz=20;
+ovlp=5;
+
+[modelFits120Win20, stats120Win20] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+
+stepsz=40;
+ovlp=5;
+[modelFits120Win40, stats120Win40] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+
+stepsz=60;
+ovlp=5;
+
+[modelFits120Win60, stats120Win60] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+toc
+
 %% sensitivity analysis
 i=1;
 %construct object for numeric parameter that can take specified values in
@@ -683,3 +773,20 @@ ylabel('a(2)')
 zlabel('a(3)')
 
 %backparse to get how much change in each param affects output
+
+%%
+for i=82:100
+    % plot
+    figure(i)
+    subplot(2,1,1)
+    plot(patient(i).gtimes,patient(i).gCGM,'-o')
+    legend('CGM data')
+    title('CGM actual vs Predicted values for various time steps')
+    ylabel('Glucose Measurements (mg/dL)')
+    xlabel('minutes since start of trial')
+    subplot(2,1,2)
+    plot(patient(i).times,patient(i).IOB)
+    ylabel('Insulin On Board')
+    xlabel('minutes since start of trial')
+    title(allfiles(i).name)
+end
