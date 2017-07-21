@@ -23,6 +23,7 @@ modelFits(MAX).ResMean=[];
 modelFits(MAX).ResStd=[];
 modelFits(MAX).MEAN=[];
 modelFits(MAX).STD=[];
+modelFits(MAX).predict=[];
 
 %define windows for parsing & overlap (default: 300min (60 steps), 25min
 %overlap (5)
@@ -93,6 +94,10 @@ for i=1:length(modelFits)
     if isempty(modelFits(i).Fits)
         modelFits(i).Fits=nan(1,3);
         modelFits(i).RES=nan(1);
+    else
+        A=[patient(i).gCGM(1:end-2*gDelta), patient(i).gCGM(gDelta+1:end-gDelta), patient(i).gIOB(1:end-2*iDelta)];
+        x=[modelFits(i).MEAN(1); modelFits(i).MEAN(2); modelFits(i).MEAN(3)];
+        modelFits(i).predict=A*x;
     end
 end
 %calculate stats

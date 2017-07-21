@@ -775,12 +775,13 @@ zlabel('a(3)')
 %backparse to get how much change in each param affects output
 
 %%
-for i=82:100
+for i=1:20
+    if length(modelFits45Win20(i).predict)==length(patient(i).gtimes(19:end))
     % plot
     figure(i)
     subplot(2,1,1)
-    plot(patient(i).gtimes,patient(i).gCGM,'-o')
-    legend('CGM data')
+    plot(patient(i).gtimes(19:end),patient(i).gCGM(19:end),'-o',patient(i).gtimes(19:end),modelFits45Win20(i).predict)
+    legend('CGM data','45Win20 predict')
     title('CGM actual vs Predicted values for various time steps')
     ylabel('Glucose Measurements (mg/dL)')
     xlabel('minutes since start of trial')
@@ -789,4 +790,5 @@ for i=82:100
     ylabel('Insulin On Board')
     xlabel('minutes since start of trial')
     title(allfiles(i).name)
+    end
 end
