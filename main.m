@@ -429,7 +429,7 @@ Globstats30min.irStdev=nanstd(Globstats30min.indivRes(Globstats30min.indivRes>0)
 Globstats30min.irMin=min(Globstats30min.indivRes(Globstats30min.indivRes>0));
 Globstats30min.irMax=max(Globstats30min.indivRes(Globstats30min.indivRes>0));
 Globstats30min.ir95=1.96*Globstats30min.irStdev;
-% minimize least squares for 45min
+%% minimize least squares for 45min
 a0=[2 1 -10];
 lb = [0 0 -50];
 ub=[5 5 0];
@@ -681,21 +681,21 @@ ovlp=5;
 toc
 
 %% sensitivity analysis
-i=1;
+i=167;
 %construct object for numeric parameter that can take specified values in
 %distribution
-a1 = param.Continuous('a1',GlobmodelFits30min(i).Fits(1));
-a2 = param.Continuous('a2',GlobmodelFits30min(i).Fits(2));
-a3 = param.Continuous('a3',abs(GlobmodelFits30min(i).Fits(3)));
+a1 = param.Continuous('a1',stats45Win20.mean(1));
+a2 = param.Continuous('a2',stats45Win20.mean(2));
+a3 = param.Continuous('a3',abs(stats45Win20.mean(3)));
 
 %make normal distrib using parameters
-pdR1 = makedist('Normal','mu',Globstats30min.mean(1),'sigma',Globstats30min.stdev(1));
-pdR2 = makedist('Normal','mu',Globstats30min.mean(2),'sigma',Globstats30min.stdev(2));
-pdR3 = makedist('Normal','mu',Globstats30min.mean(3),'sigma',Globstats30min.stdev(3));
+pdR1 = makedist('Normal','mu',stats45Win20.mean(1),'sigma',stats45Win20.stdev(1));
+pdR2 = makedist('Normal','mu',stats45Win20.mean(2),'sigma',stats45Win20.stdev(2));
+pdR3 = makedist('Normal','mu',stats45Win20.mean(3),'sigma',stats45Win20.stdev(3));
 
-x1=linspace(Globstats30min.mean(1)-3*Globstats30min.stdev(1),Globstats30min.mean(1)+3*Globstats30min.stdev(1));
-x2=linspace(Globstats30min.mean(2)-3*Globstats30min.stdev(2),Globstats30min.mean(2)+3*Globstats30min.stdev(2));
-x3=linspace(Globstats30min.mean(3)-3*Globstats30min.stdev(3),Globstats30min.mean(3)+3*Globstats30min.stdev(3));
+x1=linspace(stats45Win20.mean(1)-3*stats45Win20.stdev(1),stats45Win20.mean(1)+3*stats45Win20.stdev(1));
+x2=linspace(stats45Win20.mean(2)-3*stats45Win20.stdev(2),stats45Win20.mean(2)+3*stats45Win20.stdev(2));
+x3=linspace(stats45Win20.mean(3)-3*stats45Win20.stdev(3),stats45Win20.mean(3)+3*stats45Win20.stdev(3));
 
 figure(1)
 subplot(3,1,1)
@@ -739,6 +739,7 @@ set(gca,'Visible','off');
 set(h,'Visible','on');
 
 %% construct array of parameter combinations
+clear Sens30 dist30
 dist30=combvec(table2array(X1)',table2array(X2)',table2array(X3)')';
 %keep only valid param combos
 vC=find(dist30(:,3,:)<0 & dist30(:,1,:)>0 & dist30(:,2,:)>0);
@@ -748,22 +749,36 @@ gDelta=6;
 iDelta=6;
 delta=max(gDelta,iDelta)+1;
 
-Sens30(length(vC)).Fits=[];
-Sens30(length(vC)).RESES=[];
-Sens30(length(vC)).RES=[];
+Sens30(length(vC)).FitsRES=[];
+Sens30(length(vC)).ogFitsRES=[];
+
 
 for n=1:length(vC)
-        Sens30(n).Fits=[patient(i).gCGM(1:(delta+gDelta-1))' (dist30(vC(n),1)*patient(i).gCGM((delta-gDelta):(end-2*gDelta))+ ...
+        Sens30(n).FitsRES=(patient(i).gCGM(delta+gDelta:end)-(dist30(vC(n),1)*patient(i).gCGM((delta-gDelta):(end-2*gDelta))+ ...
             dist30(vC(n),2)*patient(i).gCGM(delta:(end-gDelta))+ ...
-            dist30(vC(n),3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta)))']';
+            dist30(vC(n),3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta))));
         
-        Sens30(n).RESES=abs(Sens30(n).Fits-patient(i).gCGM);
-        Sens30(n).RES=sum(Sens30(n).RESES);
-        Sens30(n).rMean=mean(Sens30(n).RESES);
-        Sens30(n).stdev=std(Sens30(n).RESES);
-        Sens30(n).max=max(Sens30(n).RESES);
-        Sens30(n).min=min(Sens30(n).RESES(delta+gDelta:end));
+        Sens30(n).ogFitsRES=(patient(i).gCGM(delta+gDelta:end)-((stats45Win20.mean(1))*patient(i).gCGM((delta-gDelta):(end-2*gDelta))+ ...
+            stats45Win20.mean(2)*patient(i).gCGM(delta:(end-gDelta))+ ...
+            stats45Win20.mean(3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta))));
+        
+        Sens30(n).cinRES=Sens30(n).ogFitsRES-Sens30(n).FitsRES;
+        Sens30(n).totcinRES=sum(abs(Sens30(n).cinRES));
+%         Sens30(n).RESES=abs(Sens30(n).Fits-patient(i).gCGM);
+%         Sens30(n).RES=sum(Sens30(n).RESES);
+%         Sens30(n).rMean=mean(Sens30(n).RESES);
+%         Sens30(n).stdev=std(Sens30(n).RESES);
+%         Sens30(n).max=max(Sens30(n).RESES);
+%         Sens30(n).min=min(Sens30(n).RESES(delta+gDelta:end));
 end
+%%
+%sort array by res mean
+clear res ind porder ord
+[res, ind]=sort([Sens30.totcinRES]);
+porder=vC(ind); %get ordering for which param was used
+ord=dist30(porder,1:3); %a(1) is most sensitive on first-pass
+
+
 %%
 %add weights to dots at vC based on the total residue
 figure(203)

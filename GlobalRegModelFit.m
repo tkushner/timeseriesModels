@@ -12,9 +12,10 @@ for i = 1:MAX
     modelFits(i).Fits=NaN(1,3);
     modelFits(i).RES=NaN(1);
     %check for trials with no errors (drop out/ extra points / etc)
-    if min(diff(patient(i).gtimes))==5 && max(diff(patient(i).gtimes)==5)
+    if max(diff(patient(i).gtimes))==5 & min(diff(patient(i).gtimes)==5)
         fun=@(a)(sum((patient(i).gCGM(tBEG:end)-(a(1)*patient(i).gCGM((delta-gDelta):(end-2*gDelta))+ ...
             a(2)*patient(i).gCGM(delta:(end-gDelta))+a(3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta)))).^2));
+         options=optimoptions('Display','off');
         [a,Res]=fmincon(fun,a0,[],[],[],[],lb,ub);
         modelFits(i).Fits=a;
         modelFits(i).RES=sqrt(Res)\length(patient(i).gCGM(tBEG:end));          
