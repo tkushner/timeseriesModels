@@ -738,11 +738,11 @@ h = title('Parameter combinations');
 set(gca,'Visible','off');
 set(h,'Visible','on');
 
-%% construct array of parameter combinations
-clear Sens30 dist30
+% construct array of parameter combinations
+clear Sens30 dist30 vC
 dist30=combvec(table2array(X1)',table2array(X2)',table2array(X3)')';
 %keep only valid param combos
-vC=find(dist30(:,3,:)<0 & dist30(:,1,:)>0 & dist30(:,2,:)>0);
+vC=find(dist30(:,3,:)<0 & dist30(:,1,:)>0 & dist30(:,2,:)>0); %& dist30(:,1,:)+dist30(:,2,:)<=1.2 & dist30(:,1,:)+dist30(:,2,:)>=1
 
 ID=1:MAX;
 gDelta=6;
@@ -771,21 +771,23 @@ for n=1:length(vC)
 %         Sens30(n).max=max(Sens30(n).RESES);
 %         Sens30(n).min=min(Sens30(n).RESES(delta+gDelta:end));
 end
-%%
+
 %sort array by res mean
-clear res ind porder ord
+clear res ind porder ord percentChange
 [res, ind]=sort([Sens30.totcinRES]);
 porder=vC(ind); %get ordering for which param was used
 ord=dist30(porder,1:3); %a(1) is most sensitive on first-pass
 
+percentChange=[ord./repmat(stats45Win20.mean,n,1)-ones(n,1), zeros(n,1), res'];
 
-%%
 %add weights to dots at vC based on the total residue
 figure(203)
-scatter3(dist30(vC,1),dist30(vC,2),dist30(vC,3),.01.*[Sens30.RES],.01.*[Sens30.RES],'*')
+scatter3(dist30(vC,1),dist30(vC,2),dist30(vC,3),.01.*[Sens30.totcinRES],.01.*[Sens30.totcinRES],'*')
 xlabel('a(1)')
 ylabel('a(2)')
 zlabel('a(3)')
+title('Change in residue for various parameter combinations around the mean')
+colorbar
 
 %backparse to get how much change in each param affects output
 
