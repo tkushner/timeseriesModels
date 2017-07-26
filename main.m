@@ -10,7 +10,7 @@ MAX=657;
 
 %Initialize patient struct for speed
 patient(MAX).SessionID=[];
-patient(MAX).datetime=[];
+patient(MAX).Datetime=[];
 patient(MAX).CGM=[];
 patient(MAX).IOB=[];
 patient(MAX).Bolus=[];
@@ -19,14 +19,15 @@ patient(MAX).times=[];
 patient(MAX).gtimes=[];
 patient(MAX).gCGM=[];
 patient(MAX).gIOB=[];
+patient(MAX).gDatetime=cell(1,1);
 
 tic
 parfor i=1:MAX
-    [patient(i).SessionID,patient(i).datetime,patient(i).CGM,patient(i).IOB,patient(i).Bolus,patient(i).BkgInsulin] = ...
+    [patient(i).SessionID,patient(i).Datetime,patient(i).CGM,patient(i).IOB,patient(i).Bolus,patient(i).BkgInsulin] = ...
         importCGMDATA(strcat('../outputs/byPatient/',allfiles(i).name));
     
     formatin='HH:MM:SS mm/dd/yyyy';
-    patient(i).times=datenum(patient(i).datetime,formatin);
+    patient(i).times=datenum(patient(i).Datetime,formatin);
     %rescale times based on start time
     patient(i).times=patient(i).times-patient(i).times(1);
     %get timestep - keep 5min intervals (5min~.0035)
@@ -38,6 +39,7 @@ parfor i=1:MAX
     patient(i).gtimes=round(patient(i).times(gindex));
     patient(i).gCGM=patient(i).CGM(gindex);
     patient(i).gIOB=patient(i).IOB(gindex);
+    patient(i).gDatetime=patient(i).Datetime(gindex);
     
     if isempty(patient(i).gtimes)
         patient(i).gtimes=[0,0];
@@ -598,15 +600,15 @@ lb = [0 0 -10];
 ub=[4 4 0];
 gDelta=6;
 iDelta=6;
-stepsz=20;
+stepsz=24;
 ovlp=5;
 
-[modelFits30Win20, stats30Win20] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+[modelFits30Win24, stats30Win24] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
 
 
-stepsz=40;
+stepsz=36;
 ovlp=5;
-[modelFits30Win40, stats30Win40] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+[modelFits30Win36, stats30Win36] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
 
 stepsz=60;
 ovlp=5;
@@ -621,14 +623,14 @@ ub=[2 2 0];
 gDelta=9;
 iDelta=9;
 
-stepsz=20;
+stepsz=24;
 ovlp=5;
-[modelFits45Win20, stats45Win20] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+[modelFits45Win24, stats45Win24] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
 
 
-stepsz=40;
+stepsz=36;
 ovlp=5;
-[modelFits45Win40, stats45Win40] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+[modelFits45Win36, stats45Win36] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
 
 
 stepsz=60;
@@ -644,14 +646,14 @@ ub=[4 4 0];
 gDelta=12;
 iDelta=12;
 
-stepsz=20;
+stepsz=24;
 ovlp=5;
-[modelFits60Win20, stats60Win20] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+[modelFits60Win24, stats60Win24] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
 
 
-stepsz=40;
+stepsz=36;
 ovlp=5;
-[modelFits60Win40, stats60Win40] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+[modelFits60Win36, stats60Win36] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
 
 
 stepsz=60;
@@ -665,20 +667,126 @@ lb = [0 0 -50];
 ub=[4 4 0];
 gDelta=24;
 iDelta=24;
-stepsz=20;
+stepsz=48;
 ovlp=5;
 
-[modelFits120Win20, stats120Win20] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
-
-stepsz=40;
-ovlp=5;
-[modelFits120Win40, stats120Win40] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
+[modelFits120Win48, stats120Win48] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
 
 stepsz=60;
 ovlp=5;
 
 [modelFits120Win60, stats120Win60] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
 toc
+
+%% clustering
+clear allfitsnan allfits INDEX3D allfitsTimeS allfitsTimeE
+allfitsnan=vertcat(modelFits45Win24.Fits);
+allfitsTimeS=datetime(horzcat(modelFits45Win24.windowS),'InputFormat','HH:mm:ss MM/dd/yyyy ');
+allfitsTimeE=datetime(horzcat(modelFits45Win24.windowE),'InputFormat','HH:mm:ss MM/dd/yyyy ');
+allfits=~isnan(allfitsnan);
+sSize=allfitsTimeS.Hour;
+eSize=allfitsTimeE.Hour;
+morn=find(sSize<=12);
+morn2=find(eSize<=12);
+sSize(morn)=sSize(morn)+24;
+eSize(morn2)=eSize(morn2)+24;
+
+figure(101)
+scatter3(allfitsnan(allfits(:,1),1),allfitsnan(allfits(:,2),2),allfitsnan(allfits(:,3),3))
+xlabel('a(1)')
+ylabel('a(2)')
+zlabel('a(3)')
+title('Clustering of all parameter fits for 30win24')
+colorbar
+
+% figure(102)
+A=allfitsnan(allfits(:,1),1);
+B=allfitsnan(allfits(:,2),2);
+C=allfitsnan(allfits(:,3),3);
+% plot(allfitsnan(allfits(:,1),1).*allfitsnan(allfits(:,2),2),allfitsnan(allfits(:,3),3),'o')
+
+%find clusters
+X=[sSize',A];
+
+opts = statset('Display','final');
+[idx,Cs] = kmeans(X,3,'Distance','cityblock',...
+    'Replicates',5,'Options',opts);
+
+figure(102)
+subplot(2,1,1)
+plot(X(idx==1,1),X(idx==1,2),'r.','MarkerSize',12)
+hold on
+plot(X(idx==2,1),X(idx==2,2),'b.','MarkerSize',12)
+plot(X(idx==3,1),X(idx==3,2),'g.','MarkerSize',12)
+plot(Cs(:,1),Cs(:,2),'kx',...
+     'MarkerSize',15,'LineWidth',3)
+legend('Cluster 1','Cluster 2','Cluster 3','Centroids',...
+       'Location','NW')
+title 'Cluster Assignments and Centroids'
+hold off
+%
+X=[sSize',B];
+
+opts = statset('Display','final');
+[idx,Cs] = kmeans(X,3,'Distance','cityblock',...
+    'Replicates',5,'Options',opts);
+
+figure(102)
+subplot(2,1,2)
+plot(X(idx==1,1),X(idx==1,2),'r.','MarkerSize',12)
+hold on
+plot(X(idx==2,1),X(idx==2,2),'b.','MarkerSize',12)
+plot(X(idx==3,1),X(idx==3,2),'g.','MarkerSize',12)
+plot(Cs(:,1),Cs(:,2),'kx',...
+     'MarkerSize',15,'LineWidth',3)
+legend('Cluster 1','Cluster 2','Cluster 3','Centroids',...
+       'Location','NW')
+title 'Cluster Assignments and Centroids'
+hold off
+
+%plot clusters in 3d
+INDEX3D=ones(length(A),1);
+INDEX3D(find(X(idx==1,1)))=.2;
+INDEX3D(find(X(idx==2,1)))=4;
+
+figure(103)
+scatter3(A,B,C,sSize,INDEX3D)
+xlabel('a(1)')
+ylabel('a(2)')
+zlabel('a(3)')
+title('Clustering of all parameter fits for 30win24')
+
+
+%method 2 for clustering
+clear AA
+AA=clusterdata([A,B,C],'criterion','distance','linkage','ward','maxclust',3); %ward is inner squared distance
+figure(104)
+scatter3(A,B,C,sSize,AA,'filled')
+xlabel('a(1)')
+ylabel('a(2)')
+zlabel('a(3)')
+title('Clustering of all parameter fits for 30win24')
+
+figure(105)
+subplot(3,3,1)
+scatter3(A,B,sSize)
+subplot(3,3,2)
+plot(sSize,A,'o')
+subplot(3,3,3)
+plot(sSize,B,'o')
+subplot(3,3,4)
+scatter3(A,B,eSize)
+subplot(3,3,5)
+plot(eSize,A,'o')
+subplot(3,3,6)
+plot(eSize,B,'o')
+subplot(3,3,7)
+plot(sSize,C,'o')
+subplot(3,3,8)
+plot(eSize,C,'o')
+
+figure(106)
+plot(sSize(find(X(idx==1,1))),A(find(X(idx==1,1))),'*',sSize(find(X(idx==2,1))),A(find(X(idx==2,1))),'o',sSize(find(X(idx==3,1))),A(find(X(idx==3,1))),'o')
 
 %% sensitivity analysis
 i=167;
@@ -764,21 +872,15 @@ for n=1:length(vC)
         
         Sens30(n).cinRES=Sens30(n).ogFitsRES-Sens30(n).FitsRES;
         Sens30(n).totcinRES=sum(abs(Sens30(n).cinRES));
-%         Sens30(n).RESES=abs(Sens30(n).Fits-patient(i).gCGM);
-%         Sens30(n).RES=sum(Sens30(n).RESES);
-%         Sens30(n).rMean=mean(Sens30(n).RESES);
-%         Sens30(n).stdev=std(Sens30(n).RESES);
-%         Sens30(n).max=max(Sens30(n).RESES);
-%         Sens30(n).min=min(Sens30(n).RESES(delta+gDelta:end));
 end
 
-%sort array by res mean
+%sort array by change in output
 clear res ind porder ord percentChange
 [res, ind]=sort([Sens30.totcinRES]);
 porder=vC(ind); %get ordering for which param was used
 ord=dist30(porder,1:3); %a(1) is most sensitive on first-pass
 
-percentChange=[ord./repmat(stats45Win20.mean,n,1)-ones(n,1), zeros(n,1), res'];
+percentChange=[ord./repmat(stats45Win20.mean,n,1)-ones(n,1), zeros(n,1), res']; %change in param resulting in change in output
 
 %add weights to dots at vC based on the total residue
 figure(203)
@@ -789,7 +891,6 @@ zlabel('a(3)')
 title('Change in residue for various parameter combinations around the mean')
 colorbar
 
-%backparse to get how much change in each param affects output
 
 %%
 for i=1:20
@@ -809,3 +910,44 @@ for i=1:20
     title(allfiles(i).name)
     end
 end
+
+%% histograms of residuals
+figure(5)
+subplot(3,3,1)
+histfit(vertcat(modelFits30Win20.RES),200,'Normal')
+title('30min Win20 Residues')
+subplot(3,3,2)
+histfit(vertcat(modelFits30Win40.RES),200,'Normal')
+title('30min Win40 Residues')
+subplot(3,3,3)
+histfit(vertcat(modelFits30Win60.RES),200,'Normal')
+title('30min Win60 Residues')
+subplot(3,3,4)
+histfit(vertcat(modelFits45Win20.RES),200,'Normal')
+title('45min Win20 Residues')
+subplot(3,3,5)
+histfit(vertcat(modelFits45Win40.RES),200,'Normal')
+title('45min Win40 Residues')
+subplot(3,3,6)
+histfit(vertcat(modelFits45Win60.RES),200,'Normal')
+title('45min Win60 Residues')
+subplot(3,3,7)
+histfit(vertcat(modelFits60Win40.RES),200,'Normal')
+title('60min Win40 Residues')
+subplot(3,3,8)
+histfit(vertcat(modelFits60Win60.RES),200,'Normal')
+title('60min Win60 Residues')
+subplot(3,3,9)
+histfit(vertcat(modelFits120Win60.RES),200,'Normal')
+title('120min Win60 Residues')
+
+% fit distributions 
+dist30Win20=fitdist(vertcat(modelFits30Win20.RES),'Normal');
+dist30Win40=fitdist(vertcat(modelFits30Win40.RES),'Normal');
+dist30Win60=fitdist(vertcat(modelFits30Win60.RES),'Normal');
+dist45Win20=fitdist(vertcat(modelFits45Win20.RES),'Normal');
+dist45Win40=fitdist(vertcat(modelFits45Win40.RES),'Normal');
+dist45Win60=fitdist(vertcat(modelFits45Win60.RES),'Normal');
+dist60Win40=fitdist(vertcat(modelFits60Win40.RES),'Normal');
+dist120Win60=fitdist(vertcat(modelFits120Win60.RES),'Normal');
+

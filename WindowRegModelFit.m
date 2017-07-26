@@ -24,6 +24,8 @@ modelFits(MAX).ResStd=[];
 modelFits(MAX).MEAN=[];
 modelFits(MAX).STD=[];
 modelFits(MAX).predict=[];
+modelFits(MAX).windowS=cell(1,1);
+modelFits(MAX).windowE=cell(1,1);
 
 %define windows for parsing & overlap (default: 300min (60 steps), 25min
 %overlap (5)
@@ -46,14 +48,20 @@ for i = 1:MAX
             %construct matrix of windows
             CGM=nan(stepsz,Nw);
             IOB=nan(stepsz,Nw);
+            w1=cell(Nw,1);
+            w2=cell(Nw,1);
             
             CGM(:,1)=patient(i).gCGM(1:stepsz);
             IOB(:,1)=patient(i).gIOB(1:stepsz);
+            w1(1)=patient(i).gDatetime(1);
+            w2(1)=patient(i).gDatetime(stepsz);
             
             if Nw>1
                 for j=1:Nw-1
                     CGM(:,j+1)=patient(i).gCGM((step*j):(step*j+stepsz-1));
                     IOB(:,j+1)=patient(i).gIOB((step*j):(step*j+stepsz-1));
+                    w1(j+1)=patient(i).gDatetime(step*j);
+                    w2(j+1)=patient(i).gDatetime(step*j+stepsz-1);
                 end
             else
                 continue
@@ -65,13 +73,15 @@ for i = 1:MAX
                 A=[CGM(1:end-2*gDelta,j), CGM(gDelta+1:end-gDelta,j), IOB(1:end-2*iDelta,j);[1,1,0]];
 
                 options = optimoptions('lsqlin','Algorithm','interior-point','display','off');
-                [x, resnorm, residual, exitflag, output, lambda]=lsqlin(A,B,[],[],[],[],lb,ub,a0,options);
+                [x, ~, residual, ~, ~, ~]=lsqlin(A,B,[],[],[],[],lb,ub,a0,options);
                 modelFits(i).Fits(j,:)=x;
                 modelFits(i).RES=residual;
                 modelFits(i).ResMin=min(modelFits(i).RES);
                 modelFits(i).ResMax=max(modelFits(i).RES);
                 modelFits(i).ResMean=nanmean(modelFits(i).RES);
                 modelFits(i).ResStd=nanstd(modelFits(i).RES);
+                modelFits(i).windowS(j)=w1(j);
+                modelFits(i).windowE(j)=w2(j);
                 
                 if Nw>1
                     modelFits(i).MEAN=nanmean(modelFits(i).Fits);
