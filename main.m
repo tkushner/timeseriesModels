@@ -680,9 +680,9 @@ toc
 
 %% clustering
 clear allfitsnan allfits INDEX3D allfitsTimeS allfitsTimeE eSize sSize morn morn2
-allfitsnan=vertcat(modelFits45Win36.Fits);
-allfitsTimeS=datetime(horzcat(modelFits45Win36.windowS),'InputFormat','HH:mm:ss MM/dd/yyyy ');
-allfitsTimeE=datetime(horzcat(modelFits45Win36.windowE),'InputFormat','HH:mm:ss MM/dd/yyyy ');
+allfitsnan=vertcat(vertcat(modelFits45Win36.Fits),vertcat(modelFits45Win24.Fits));
+allfitsTimeS=horzcat(datetime(horzcat(modelFits45Win36.windowS),'InputFormat','HH:mm:ss MM/dd/yyyy '), datetime(horzcat(modelFits45Win24.windowS),'InputFormat','HH:mm:ss MM/dd/yyyy '));
+allfitsTimeE=horzcat(datetime(horzcat(modelFits45Win36.windowE),'InputFormat','HH:mm:ss MM/dd/yyyy '), datetime(horzcat(modelFits45Win24.windowE),'InputFormat','HH:mm:ss MM/dd/yyyy '));
 allfits=~isnan(allfitsnan);
 sSize=allfitsTimeS.Hour;
 eSize=allfitsTimeE.Hour;
@@ -760,6 +760,11 @@ histfit(Xa1(idx==2,2),200)
 subplot(2,3,3)
 histfit(Xa1(idx==3,2),200)
 
+%determine if two datasets come from the same distribution -- if true, null
+%hypothesis is rejected
+kstest2(Xa1(idx==1,2),Xa1(idx==3,2),'Alpha',.35)
+kstest2(Xa1(idx==1,2),Xa1(idx==2,2),'Alpha',.35)
+kstest2(Xa1(idx==2,2),Xa1(idx==3,2),'Alpha',.35)
 
 %plot clusters in 3d
 INDEX3D=ones(length(A),1);
