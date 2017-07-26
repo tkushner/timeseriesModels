@@ -595,9 +595,9 @@ Globstats120min.ir95=1.96*Globstats120min.irStdev;
 %% Optimization by window
 tic 
 
-a0=[.5 .5 -2.5];
+a0=[.6 .4 -2.5];
 lb = [0 0 -10];
-ub=[4 4 0];
+ub=[1.5 1.5 0];
 gDelta=6;
 iDelta=6;
 stepsz=24;
@@ -617,9 +617,9 @@ ovlp=5;
 
 % 45min
 
-a0=[2 1 -10];
+a0=[.6 .4 -10];
 lb = [0 0 -50];
-ub=[2 2 0];
+ub=[1.5 1.5 0];
 gDelta=9;
 iDelta=9;
 
@@ -640,9 +640,9 @@ ovlp=5;
 
 % 60min
 
-a0=[2 1 -10];
+a0=[.6 .4 -10];
 lb = [0 0 -50];
-ub=[4 4 0];
+ub=[1.5 1.5 0];
 gDelta=12;
 iDelta=12;
 
@@ -662,9 +662,9 @@ ovlp=5;
 
 %120min
 
-a0=[2 1 -10];
+a0=[.6 .4 -10];
 lb = [0 0 -50];
-ub=[4 4 0];
+ub=[1.5 1.5 0];
 gDelta=24;
 iDelta=24;
 stepsz=48;
@@ -679,10 +679,10 @@ ovlp=5;
 toc
 
 %% clustering
-clear allfitsnan allfits INDEX3D allfitsTimeS allfitsTimeE
-allfitsnan=vertcat(modelFits45Win24.Fits);
-allfitsTimeS=datetime(horzcat(modelFits45Win24.windowS),'InputFormat','HH:mm:ss MM/dd/yyyy ');
-allfitsTimeE=datetime(horzcat(modelFits45Win24.windowE),'InputFormat','HH:mm:ss MM/dd/yyyy ');
+clear allfitsnan allfits INDEX3D allfitsTimeS allfitsTimeE eSize sSize morn morn2
+allfitsnan=vertcat(modelFits45Win36.Fits);
+allfitsTimeS=datetime(horzcat(modelFits45Win36.windowS),'InputFormat','HH:mm:ss MM/dd/yyyy ');
+allfitsTimeE=datetime(horzcat(modelFits45Win36.windowE),'InputFormat','HH:mm:ss MM/dd/yyyy ');
 allfits=~isnan(allfitsnan);
 sSize=allfitsTimeS.Hour;
 eSize=allfitsTimeE.Hour;
@@ -706,48 +706,65 @@ C=allfitsnan(allfits(:,3),3);
 % plot(allfitsnan(allfits(:,1),1).*allfitsnan(allfits(:,2),2),allfitsnan(allfits(:,3),3),'o')
 
 %find clusters
-X=[sSize',A];
+Xa1=[sSize',A];
 
 opts = statset('Display','final');
-[idx,Cs] = kmeans(X,3,'Distance','cityblock',...
-    'Replicates',5,'Options',opts);
+[idx,Csa1] = kmeans(Xa1,3,'Distance','cityblock',...
+    'Replicates',8,'Options',opts);
 
 figure(102)
 subplot(2,1,1)
-plot(X(idx==1,1),X(idx==1,2),'r.','MarkerSize',12)
+plot(Xa1(idx==1,1),Xa1(idx==1,2),'r.','MarkerSize',12)
 hold on
-plot(X(idx==2,1),X(idx==2,2),'b.','MarkerSize',12)
-plot(X(idx==3,1),X(idx==3,2),'g.','MarkerSize',12)
-plot(Cs(:,1),Cs(:,2),'kx',...
+plot(Xa1(idx==2,1),Xa1(idx==2,2),'b.','MarkerSize',12)
+plot(Xa1(idx==3,1),Xa1(idx==3,2),'g.','MarkerSize',12)
+plot(Csa1(:,1),Csa1(:,2),'kx',...
      'MarkerSize',15,'LineWidth',3)
 legend('Cluster 1','Cluster 2','Cluster 3','Centroids',...
        'Location','NW')
 title 'Cluster Assignments and Centroids'
+xlabel('time, hrs')
+ylabel('a(1)')
 hold off
 %
-X=[sSize',B];
+Xa2=[sSize',B];
 
 opts = statset('Display','final');
-[idx,Cs] = kmeans(X,3,'Distance','cityblock',...
-    'Replicates',5,'Options',opts);
+[idx,Csa2] = kmeans(Xa2,3,'Distance','cityblock',...
+    'Replicates',8,'Options',opts);
 
 figure(102)
 subplot(2,1,2)
-plot(X(idx==1,1),X(idx==1,2),'r.','MarkerSize',12)
+plot(Xa2(idx==1,1),Xa2(idx==1,2),'r.','MarkerSize',12)
 hold on
-plot(X(idx==2,1),X(idx==2,2),'b.','MarkerSize',12)
-plot(X(idx==3,1),X(idx==3,2),'g.','MarkerSize',12)
-plot(Cs(:,1),Cs(:,2),'kx',...
+plot(Xa2(idx==2,1),Xa2(idx==2,2),'b.','MarkerSize',12)
+plot(Xa2(idx==3,1),Xa2(idx==3,2),'g.','MarkerSize',12)
+plot(Csa2(:,1),Csa2(:,2),'kx',...
      'MarkerSize',15,'LineWidth',3)
 legend('Cluster 1','Cluster 2','Cluster 3','Centroids',...
        'Location','NW')
 title 'Cluster Assignments and Centroids'
+xlabel('time, hrs')
+ylabel('a(2)')
 hold off
+% find distributions
+a1BEG=fitdist(Xa1(idx==1,2),'Normal');
+a1MID=fitdist(Xa1(idx==3,2),'Normal');
+a1END=fitdist(Xa1(idx==2,2),'Normal');
+
+figure(100)
+subplot(2,3,1)
+histfit(Xa1(idx==1,2),200)
+subplot(2,3,2)
+histfit(Xa1(idx==2,2),200)
+subplot(2,3,3)
+histfit(Xa1(idx==3,2),200)
+
 
 %plot clusters in 3d
 INDEX3D=ones(length(A),1);
-INDEX3D(find(X(idx==1,1)))=.2;
-INDEX3D(find(X(idx==2,1)))=4;
+INDEX3D(find(Xa2(idx==1,1)))=.2;
+INDEX3D(find(Xa2(idx==2,1)))=4;
 
 figure(103)
 scatter3(A,B,C,sSize,INDEX3D)
@@ -784,9 +801,6 @@ subplot(3,3,7)
 plot(sSize,C,'o')
 subplot(3,3,8)
 plot(eSize,C,'o')
-
-figure(106)
-plot(sSize(find(X(idx==1,1))),A(find(X(idx==1,1))),'*',sSize(find(X(idx==2,1))),A(find(X(idx==2,1))),'o',sSize(find(X(idx==3,1))),A(find(X(idx==3,1))),'o')
 
 %% sensitivity analysis
 i=167;
