@@ -2,11 +2,16 @@
 %Taisa Kushner
 %1 Aug 2017
 
-function [] = clusterFits(dataset, datadef, numclust, plotsOn)
+function [clusterdata] = clusterFits(dataset, datadef, numclust, unum, plotsOn)
 
 %specifiy dataset and plot label
 %dataset=modelFits30Win36;
 %datadef='Delta=30min, fit window=180min';
+
+% allfitsnan=vertcat(vertcat(modelFits45Win36.Fits),vertcat(modelFits45Win24.Fits));
+% allfitsTimeS=horzcat(datetime(horzcat(modelFits45Win36.windowS),'InputFormat','HH:mm:ss MM/dd/yyyy '), datetime(horzcat(modelFits45Win24.windowS),'InputFormat','HH:mm:ss MM/dd/yyyy '));
+% allfitsTimeE=horzcat(datetime(horzcat(modelFits45Win36.windowE),'InputFormat','HH:mm:ss MM/dd/yyyy '), datetime(horzcat(modelFits45Win24.windowE),'InputFormat','HH:mm:ss MM/dd/yyyy '));
+
 
 allfitsnan=vertcat(vertcat(dataset.Fits));
 windS=horzcat(dataset.windowS);
@@ -34,7 +39,7 @@ if numclust==3
     [idxa1,Csa1] = kmeans(Xa1,numclust,'Distance','cityblock',...
         'Replicates',8,'Options',opts);
     
-    figure(102)
+    figure(100+unum)
     subplot(2,1,1)
     plot(Xa1(idxa1==1,1),Xa1(idxa1==1,2),'r.','MarkerSize',12)
     hold on
@@ -55,7 +60,7 @@ if numclust==3
     [idxa2,Csa2] = kmeans(Xa2,numclust,'Distance','cityblock',...
         'Replicates',8,'Options',opts);
     
-    figure(102)
+    figure(100+unum)
     subplot(2,1,2)
     plot(Xa2(idxa2==1,1),Xa2(idxa2==1,2),'r.','MarkerSize',12)
     hold on
@@ -88,6 +93,10 @@ if numclust==3
     [a12ksh2, a12ksp2]=kstest2(Xa2(idxa2==1,2),Xa2(idxa2==2,2),'Alpha',.35);
     [a23ksh2, a23ksp2]=kstest2(Xa2(idxa2==2,2),Xa2(idxa2==3,2),'Alpha',.35);
     
+    clust1mean=mean([A(idxa1==1), B(idxa1==1), C(idxa1==1)]);
+    clust2mean=mean([A(idxa1==2), B(idxa1==2), C(idxa1==2)]);
+    clust3mean=mean([A(idxa1==3), B(idxa1==3), C(idxa1==3)]);
+
 elseif numclust==2
     Xa1=[sSize',A];
     
@@ -95,7 +104,7 @@ elseif numclust==2
     [idxa1,Csa1] = kmeans(Xa1,numclust,'Distance','cityblock',...
         'Replicates',8,'Options',opts);
     
-    figure(102)
+    figure(100+unum)
     subplot(2,1,1)
     plot(Xa1(idxa1==1,1),Xa1(idxa1==1,2),'r.','MarkerSize',12)
     hold on
@@ -114,7 +123,7 @@ elseif numclust==2
     [idxa2,Csa2] = kmeans(Xa2,numclust,'Distance','cityblock',...
         'Replicates',8,'Options',opts);
     
-    figure(102)
+    figure(100+unum)
     subplot(2,1,2)
     plot(Xa2(idxa2==1,1),Xa2(idxa2==1,2),'r.','MarkerSize',12)
     hold on
@@ -140,6 +149,8 @@ elseif numclust==2
     
     [a12ksh2, a12ksp2]=kstest2(Xa2(idxa2==1,2),Xa2(idxa2==2,2),'Alpha',.35);
     
+    clust1mean=mean([A(idxa1==1), B(idxa1==1), C(idxa1==1)]);
+    clust2mean=mean([A(idxa1==2), B(idxa1==2), C(idxa1==2)]);
 end
 
 
@@ -209,6 +220,20 @@ if plotsOn==1
     set(gca,'Visible','off');
     set(h,'Visible','on');
 end
+
+clusterdata.numclust=numclust;
+if numclust==3
+    clusterdata.means=vertcat(clust1mean, clust2mean, clust3mean);
+    clusterdata.a1pvals=horzcat(a12ksp,a23ksp,a13ksp);
+    clusterdata.a2pvals=horzcat(a12ksp2,a23ksp2, a13ksp2);
+    clusterdata.pvalsdesc='12 23 13';
+elseif numclust==2
+    clusterdata.means=vertcat(clust1mean, clust2mean);
+    clusterdata.a1pvals=a12ksp;
+    clusterdata.a2pvals=a12ksp2;
+    clusterdata.pvalsdesc='12';
+end
+
 
 end
 

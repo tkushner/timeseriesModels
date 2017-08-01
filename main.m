@@ -1,9 +1,10 @@
 %30 June 2017
-%compiled fits to pull function instead of all together
-%13 July added global optimization scheme to bottom
+%Taisa Kushner
+%fits for data
 
 %turn off the beeping
 beep off 
+cd ./timeseriesModels
 
 %pull all files for given patient
 allfiles=dir('../outputs/byPatient/session-PSO3-001-*');
@@ -50,17 +51,22 @@ parfor i=1:MAX
         patient(i).gIOB=0;
     end
 end
+
+%patient(451) & (195) are faulty in that the trial goes until 1pm, throw them out
+patient(451).gtimes=[0,0];
+patient(195).gtimes=[0,0];
+
 toc
 
 %% minimize least squares for 30min
-a0=[.8 .2 -.4];
-lb = [0 0 -5];
-ub=[2 2 0];
-gDelta=6;
-iDelta=6;
-tic
-[modelFits30min, stats30min]=RegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
-toc
+% a0=[.8 .2 -.4];
+% lb = [0 0 -5];
+% ub=[2 2 0];
+% gDelta=6;
+% iDelta=6;
+% tic
+% [modelFits30min, stats30min]=RegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
+% toc
 
 % %% minimize least squares for 45min
 % a0=[2 1 -10];
@@ -403,197 +409,197 @@ toc
 % 
 %% GLOBAL OPTIMIZATION this is so much faster omg
 %% minimize least squares for 30min
-a0=[.5 .5 -2.5];
-lb = [0 0 -10];
-ub=[4 4 0];
-gDelta=6;
-iDelta=6;
-tic
-[GlobmodelFits30min, Globstats30min]=GlobalRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
-toc
-
-ID=1:MAX;
-delta=max(gDelta,iDelta)+1;
-
-for i=ID
-    tEND=length(patient(i).gtimes);
-    if GlobmodelFits30min(i).RES >0 && ~isnan(GlobmodelFits30min(i).RES)
-        GlobmodelFits30min(i).predict=[patient(i).gCGM(1:(delta+gDelta-1))' (GlobmodelFits30min(i).Fits(1)*patient(i).gCGM((delta-gDelta):(end-2*gDelta))+ ...
-            GlobmodelFits30min(i).Fits(2)*patient(i).gCGM(delta:(end-gDelta))+ ...
-            GlobmodelFits30min(i).Fits(3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta)))']';
-        
-        GlobmodelFits30min(i).indivRes=abs(GlobmodelFits30min(i).predict-patient(i).gCGM);
-    else
-        GlobmodelFits30min(i).indivRes=0;
-    end
-end
-
-Globstats30min.indivRes=vertcat(GlobmodelFits30min(1:end).indivRes);
-Globstats30min.irMean=nanmean(Globstats30min.indivRes(Globstats30min.indivRes>0));
-Globstats30min.irStdev=nanstd(Globstats30min.indivRes(Globstats30min.indivRes>0));
-Globstats30min.irMin=min(Globstats30min.indivRes(Globstats30min.indivRes>0));
-Globstats30min.irMax=max(Globstats30min.indivRes(Globstats30min.indivRes>0));
-Globstats30min.ir95=1.96*Globstats30min.irStdev;
-%% minimize least squares for 45min
-a0=[2 1 -10];
-lb = [0 0 -50];
-ub=[5 5 0];
-gDelta=9;
-iDelta=9;
-tic
-[GlobmodelFits45min, Globstats45min]=GlobalRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
-toc
-% minimize least squares for 60min
-a0=[2 1 -10];
-lb = [0 0 -50];
-ub=[4 4 0];
-gDelta=12;
-iDelta=12;
-tic
-[GlobmodelFits60min, Globstats60min]=GlobalRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
-toc
-% 120min
-a0=[2 1 -10];
-lb = [0 0 -50];
-ub=[4 4 0];
-gDelta=24;
-iDelta=24;
-tic
-[GlobmodelFits120min, Globstats120min]=GlobalRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
-toc
-
-%% Plots
-ID=1:MAX;
-gDelta=6;
-iDelta=6;
-delta=max(gDelta,iDelta)+1;
-
-for i=ID
-    tEND=length(patient(i).gtimes);
-    if GlobmodelFits30min(i).RES >0 && ~isnan(GlobmodelFits30min(i).RES)
-        GlobmodelFits30min(i).predict=[patient(i).gCGM(1:(delta+gDelta-1))' (GlobmodelFits30min(i).Fits(1)*patient(i).gCGM((delta-gDelta):(end-2*gDelta))+ ...
-            GlobmodelFits30min(i).Fits(2)*patient(i).gCGM(delta:(end-gDelta))+ ...
-            GlobmodelFits30min(i).Fits(3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta)))']';
-        
-        GlobmodelFits30min(i).indivRes=abs(GlobmodelFits30min(i).predict-patient(i).gCGM);
-    else
-        GlobmodelFits30min(i).indivRes=0;
-    end
-end
-%%
-gDelta=9;
-iDelta=9;
-delta=max(gDelta,iDelta)+1;
-
-for i=ID
-    tEND=length(patient(i).gtimes);
-    if GlobmodelFits45min(i).RES >0 && ~isnan(GlobmodelFits45min(i).RES)
-    GlobmodelFits45min(i).predict=[patient(i).gCGM(1:(delta+gDelta-1))' (GlobmodelFits45min(i).Fits(1)*patient(i).gCGM((delta-gDelta):(end-2*gDelta))+ ...
-            GlobmodelFits45min(i).Fits(2)*patient(i).gCGM(delta:(end-gDelta))+ ... 
-            GlobmodelFits45min(i).Fits(3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta)))']';
-        
-                GlobmodelFits45min(i).indivRes=abs(GlobmodelFits45min(i).predict-patient(i).gCGM);
-
-    else
-                GlobmodelFits45min(i).indivRes=0;
-
-    end
-end
-
-gDelta=12;
-iDelta=12;
-delta=max(gDelta,iDelta)+1;
-
-for i=ID
-    tEND=length(patient(i).gtimes);
-    if GlobmodelFits60min(i).RES >0 && ~isnan(GlobmodelFits60min(i).RES)
-    GlobmodelFits60min(i).predict=[patient(i).gCGM(1:(delta+gDelta-1))' (GlobmodelFits60min(i).Fits(1)*patient(i).gCGM((delta-gDelta):(end-2*gDelta))+ ...
-            GlobmodelFits60min(i).Fits(2)*patient(i).gCGM(delta:(end-gDelta))+ ... 
-            GlobmodelFits60min(i).Fits(3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta)))']';
-        
-                GlobmodelFits60min(i).indivRes=abs(GlobmodelFits60min(i).predict-patient(i).gCGM);
-
-    else
-                GlobmodelFits60min(i).indivRes=0;
-
-    end
-end
-
-gDelta=24;
-iDelta=24;
-delta=max(gDelta,iDelta)+1;
-
-for i=ID
-    tEND=length(patient(i).gtimes);
-    if GlobmodelFits120min(i).RES >0 && ~isnan(GlobmodelFits120min(i).RES)
-    GlobmodelFits120min(i).predict=[patient(i).gCGM(1:(delta+gDelta-1))' (GlobmodelFits120min(i).Fits(1)*patient(i).gCGM((delta-gDelta):(end-2*gDelta))+ ...
-            GlobmodelFits120min(i).Fits(2)*patient(i).gCGM(delta:(end-gDelta))+ ... 
-            GlobmodelFits120min(i).Fits(3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta)))']';
-        
-                GlobmodelFits120min(i).indivRes=abs(GlobmodelFits120min(i).predict-patient(i).gCGM);
-
-    else
-        GlobmodelFits120min(i).indivRes=0;
-    end
-end
-%%
-for i=1:20
-    if ~isempty(GlobmodelFits120min(i).predict)
-    figure(i)
-    subplot(2,1,1)
-    plot(patient(i).gtimes,patient(i).gCGM,'-o',patient(i).gtimes,GlobmodelFits30min(i).predict,patient(i).gtimes,GlobmodelFits45min(i).predict,patient(i).gtimes,GlobmodelFits60min(i).predict,patient(i).gtimes,GlobmodelFits120min(i).predict)
-    legend('CGM data','30min','45min','60min','120min')
-    title('CGM actual vs Predicted values for various time steps')
-    ylabel('Glucose Measurements (mg/dL)')
-    xlabel('minutes since start of trial')
-    subplot(2,1,2)
-    plot(patient(i).times,patient(i).IOB)
-    ylabel('Insulin On Board')
-    xlabel('minutes since start of trial')
-    title(allfiles(i).name)
-    else
-        continue
-    end
-end
-% %%
+% a0=[.5 .5 -2.5];
+% lb = [0 0 -10];
+% ub=[4 4 0];
+% gDelta=6;
+% iDelta=6;
+% tic
+% [GlobmodelFits30min, Globstats30min]=GlobalRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
+% toc
+% 
+% ID=1:MAX;
+% delta=max(gDelta,iDelta)+1;
+% 
 % for i=ID
-% figure(100+i)
-% subplot(2,1,1)
-% hist(modelFits30min(i).predict(13:end)-patient(i).gCGM(13:end),200)
-% title('Residuals 30min')
-% subplot(2,1,2)
-% hist(GlobmodelFits30min(i).predict(13:end)-patient(i).gCGM(13:end),200)
-% title('Residuals 30min Global')
+%     tEND=length(patient(i).gtimes);
+%     if GlobmodelFits30min(i).RES >0 && ~isnan(GlobmodelFits30min(i).RES)
+%         GlobmodelFits30min(i).predict=[patient(i).gCGM(1:(delta+gDelta-1))' (GlobmodelFits30min(i).Fits(1)*patient(i).gCGM((delta-gDelta):(end-2*gDelta))+ ...
+%             GlobmodelFits30min(i).Fits(2)*patient(i).gCGM(delta:(end-gDelta))+ ...
+%             GlobmodelFits30min(i).Fits(3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta)))']';
+%         
+%         GlobmodelFits30min(i).indivRes=abs(GlobmodelFits30min(i).predict-patient(i).gCGM);
+%     else
+%         GlobmodelFits30min(i).indivRes=0;
+%     end
 % end
-%% calculate stats for residuals of global fit model
-
-Globstats30min.indivRes=vertcat(GlobmodelFits30min(1:end).indivRes);
-Globstats30min.irMean=nanmean(Globstats30min.indivRes(Globstats30min.indivRes>0));
-Globstats30min.irStdev=nanstd(Globstats30min.indivRes(Globstats30min.indivRes>0));
-Globstats30min.irMin=min(Globstats30min.indivRes(Globstats30min.indivRes>0));
-Globstats30min.irMax=max(Globstats30min.indivRes(Globstats30min.indivRes>0));
-Globstats30min.ir95=1.96*Globstats30min.irStdev;
-
-Globstats45min.indivRes=vertcat(GlobmodelFits45min(1:end).indivRes);
-Globstats45min.irMean=nanmean(Globstats45min.indivRes(Globstats45min.indivRes>0));
-Globstats45min.irStdev=nanstd(Globstats45min.indivRes(Globstats45min.indivRes>0));
-Globstats45min.irMin=min(Globstats45min.indivRes(Globstats45min.indivRes>0));
-Globstats45min.irMax=max(Globstats45min.indivRes(Globstats45min.indivRes>0));
-Globstats45min.ir95=1.96*Globstats45min.irStdev;
-
-Globstats60min.indivRes=vertcat(GlobmodelFits60min(1:end).indivRes);
-Globstats60min.irMean=nanmean(Globstats60min.indivRes(Globstats60min.indivRes>0));
-Globstats60min.irStdev=nanstd(Globstats60min.indivRes(Globstats60min.indivRes>0));
-Globstats60min.irMin=min(Globstats60min.indivRes(Globstats60min.indivRes>0));
-Globstats60min.irMax=max(Globstats60min.indivRes(Globstats60min.indivRes>0));
-Globstats60min.ir95=1.96*Globstats60min.irStdev;
-
-Globstats120min.indivRes=vertcat(GlobmodelFits120min(1:end).indivRes);
-Globstats120min.irMean=nanmean(Globstats120min.indivRes(Globstats120min.indivRes>0));
-Globstats120min.irStdev=nanstd(Globstats120min.indivRes(Globstats120min.indivRes>0));
-Globstats120min.irMin=min(Globstats120min.indivRes(Globstats120min.indivRes>0));
-Globstats120min.irMax=max(Globstats120min.indivRes(Globstats120min.indivRes>0));
-Globstats120min.ir95=1.96*Globstats120min.irStdev;
+% 
+% Globstats30min.indivRes=vertcat(GlobmodelFits30min(1:end).indivRes);
+% Globstats30min.irMean=nanmean(Globstats30min.indivRes(Globstats30min.indivRes>0));
+% Globstats30min.irStdev=nanstd(Globstats30min.indivRes(Globstats30min.indivRes>0));
+% Globstats30min.irMin=min(Globstats30min.indivRes(Globstats30min.indivRes>0));
+% Globstats30min.irMax=max(Globstats30min.indivRes(Globstats30min.indivRes>0));
+% Globstats30min.ir95=1.96*Globstats30min.irStdev;
+% %% minimize least squares for 45min
+% a0=[2 1 -10];
+% lb = [0 0 -50];
+% ub=[5 5 0];
+% gDelta=9;
+% iDelta=9;
+% tic
+% [GlobmodelFits45min, Globstats45min]=GlobalRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
+% toc
+% % minimize least squares for 60min
+% a0=[2 1 -10];
+% lb = [0 0 -50];
+% ub=[4 4 0];
+% gDelta=12;
+% iDelta=12;
+% tic
+% [GlobmodelFits60min, Globstats60min]=GlobalRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
+% toc
+% % 120min
+% a0=[2 1 -10];
+% lb = [0 0 -50];
+% ub=[4 4 0];
+% gDelta=24;
+% iDelta=24;
+% tic
+% [GlobmodelFits120min, Globstats120min]=GlobalRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX);
+% toc
+% 
+% %% Plots
+% ID=1:MAX;
+% gDelta=6;
+% iDelta=6;
+% delta=max(gDelta,iDelta)+1;
+% 
+% for i=ID
+%     tEND=length(patient(i).gtimes);
+%     if GlobmodelFits30min(i).RES >0 && ~isnan(GlobmodelFits30min(i).RES)
+%         GlobmodelFits30min(i).predict=[patient(i).gCGM(1:(delta+gDelta-1))' (GlobmodelFits30min(i).Fits(1)*patient(i).gCGM((delta-gDelta):(end-2*gDelta))+ ...
+%             GlobmodelFits30min(i).Fits(2)*patient(i).gCGM(delta:(end-gDelta))+ ...
+%             GlobmodelFits30min(i).Fits(3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta)))']';
+%         
+%         GlobmodelFits30min(i).indivRes=abs(GlobmodelFits30min(i).predict-patient(i).gCGM);
+%     else
+%         GlobmodelFits30min(i).indivRes=0;
+%     end
+% end
+% %%
+% gDelta=9;
+% iDelta=9;
+% delta=max(gDelta,iDelta)+1;
+% 
+% for i=ID
+%     tEND=length(patient(i).gtimes);
+%     if GlobmodelFits45min(i).RES >0 && ~isnan(GlobmodelFits45min(i).RES)
+%     GlobmodelFits45min(i).predict=[patient(i).gCGM(1:(delta+gDelta-1))' (GlobmodelFits45min(i).Fits(1)*patient(i).gCGM((delta-gDelta):(end-2*gDelta))+ ...
+%             GlobmodelFits45min(i).Fits(2)*patient(i).gCGM(delta:(end-gDelta))+ ... 
+%             GlobmodelFits45min(i).Fits(3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta)))']';
+%         
+%                 GlobmodelFits45min(i).indivRes=abs(GlobmodelFits45min(i).predict-patient(i).gCGM);
+% 
+%     else
+%                 GlobmodelFits45min(i).indivRes=0;
+% 
+%     end
+% end
+% 
+% gDelta=12;
+% iDelta=12;
+% delta=max(gDelta,iDelta)+1;
+% 
+% for i=ID
+%     tEND=length(patient(i).gtimes);
+%     if GlobmodelFits60min(i).RES >0 && ~isnan(GlobmodelFits60min(i).RES)
+%     GlobmodelFits60min(i).predict=[patient(i).gCGM(1:(delta+gDelta-1))' (GlobmodelFits60min(i).Fits(1)*patient(i).gCGM((delta-gDelta):(end-2*gDelta))+ ...
+%             GlobmodelFits60min(i).Fits(2)*patient(i).gCGM(delta:(end-gDelta))+ ... 
+%             GlobmodelFits60min(i).Fits(3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta)))']';
+%         
+%                 GlobmodelFits60min(i).indivRes=abs(GlobmodelFits60min(i).predict-patient(i).gCGM);
+% 
+%     else
+%                 GlobmodelFits60min(i).indivRes=0;
+% 
+%     end
+% end
+% 
+% gDelta=24;
+% iDelta=24;
+% delta=max(gDelta,iDelta)+1;
+% 
+% for i=ID
+%     tEND=length(patient(i).gtimes);
+%     if GlobmodelFits120min(i).RES >0 && ~isnan(GlobmodelFits120min(i).RES)
+%     GlobmodelFits120min(i).predict=[patient(i).gCGM(1:(delta+gDelta-1))' (GlobmodelFits120min(i).Fits(1)*patient(i).gCGM((delta-gDelta):(end-2*gDelta))+ ...
+%             GlobmodelFits120min(i).Fits(2)*patient(i).gCGM(delta:(end-gDelta))+ ... 
+%             GlobmodelFits120min(i).Fits(3)*patient(i).gIOB((delta-iDelta):(end-2*iDelta)))']';
+%         
+%                 GlobmodelFits120min(i).indivRes=abs(GlobmodelFits120min(i).predict-patient(i).gCGM);
+% 
+%     else
+%         GlobmodelFits120min(i).indivRes=0;
+%     end
+% end
+% %%
+% for i=1:20
+%     if ~isempty(GlobmodelFits120min(i).predict)
+%     figure(i)
+%     subplot(2,1,1)
+%     plot(patient(i).gtimes,patient(i).gCGM,'-o',patient(i).gtimes,GlobmodelFits30min(i).predict,patient(i).gtimes,GlobmodelFits45min(i).predict,patient(i).gtimes,GlobmodelFits60min(i).predict,patient(i).gtimes,GlobmodelFits120min(i).predict)
+%     legend('CGM data','30min','45min','60min','120min')
+%     title('CGM actual vs Predicted values for various time steps')
+%     ylabel('Glucose Measurements (mg/dL)')
+%     xlabel('minutes since start of trial')
+%     subplot(2,1,2)
+%     plot(patient(i).times,patient(i).IOB)
+%     ylabel('Insulin On Board')
+%     xlabel('minutes since start of trial')
+%     title(allfiles(i).name)
+%     else
+%         continue
+%     end
+% end
+% % %%
+% % for i=ID
+% % figure(100+i)
+% % subplot(2,1,1)
+% % hist(modelFits30min(i).predict(13:end)-patient(i).gCGM(13:end),200)
+% % title('Residuals 30min')
+% % subplot(2,1,2)
+% % hist(GlobmodelFits30min(i).predict(13:end)-patient(i).gCGM(13:end),200)
+% % title('Residuals 30min Global')
+% % end
+% %% calculate stats for residuals of global fit model
+% 
+% Globstats30min.indivRes=vertcat(GlobmodelFits30min(1:end).indivRes);
+% Globstats30min.irMean=nanmean(Globstats30min.indivRes(Globstats30min.indivRes>0));
+% Globstats30min.irStdev=nanstd(Globstats30min.indivRes(Globstats30min.indivRes>0));
+% Globstats30min.irMin=min(Globstats30min.indivRes(Globstats30min.indivRes>0));
+% Globstats30min.irMax=max(Globstats30min.indivRes(Globstats30min.indivRes>0));
+% Globstats30min.ir95=1.96*Globstats30min.irStdev;
+% 
+% Globstats45min.indivRes=vertcat(GlobmodelFits45min(1:end).indivRes);
+% Globstats45min.irMean=nanmean(Globstats45min.indivRes(Globstats45min.indivRes>0));
+% Globstats45min.irStdev=nanstd(Globstats45min.indivRes(Globstats45min.indivRes>0));
+% Globstats45min.irMin=min(Globstats45min.indivRes(Globstats45min.indivRes>0));
+% Globstats45min.irMax=max(Globstats45min.indivRes(Globstats45min.indivRes>0));
+% Globstats45min.ir95=1.96*Globstats45min.irStdev;
+% 
+% Globstats60min.indivRes=vertcat(GlobmodelFits60min(1:end).indivRes);
+% Globstats60min.irMean=nanmean(Globstats60min.indivRes(Globstats60min.indivRes>0));
+% Globstats60min.irStdev=nanstd(Globstats60min.indivRes(Globstats60min.indivRes>0));
+% Globstats60min.irMin=min(Globstats60min.indivRes(Globstats60min.indivRes>0));
+% Globstats60min.irMax=max(Globstats60min.indivRes(Globstats60min.indivRes>0));
+% Globstats60min.ir95=1.96*Globstats60min.irStdev;
+% 
+% Globstats120min.indivRes=vertcat(GlobmodelFits120min(1:end).indivRes);
+% Globstats120min.irMean=nanmean(Globstats120min.indivRes(Globstats120min.indivRes>0));
+% Globstats120min.irStdev=nanstd(Globstats120min.indivRes(Globstats120min.indivRes>0));
+% Globstats120min.irMin=min(Globstats120min.indivRes(Globstats120min.indivRes>0));
+% Globstats120min.irMax=max(Globstats120min.indivRes(Globstats120min.indivRes>0));
+% Globstats120min.ir95=1.96*Globstats120min.irStdev;
 
 %% Optimization by window
 tic 
@@ -682,140 +688,25 @@ ovlp=5;
 toc
 
 %% clustering
-clear allfitsnan allfits INDEX3D allfitsTimeS allfitsTimeE eSize sSize morn morn2
 
-% allfitsnan=vertcat(vertcat(modelFits45Win36.Fits),vertcat(modelFits45Win24.Fits));
-% allfitsTimeS=horzcat(datetime(horzcat(modelFits45Win36.windowS),'InputFormat','HH:mm:ss MM/dd/yyyy '), datetime(horzcat(modelFits45Win24.windowS),'InputFormat','HH:mm:ss MM/dd/yyyy '));
-% allfitsTimeE=horzcat(datetime(horzcat(modelFits45Win36.windowE),'InputFormat','HH:mm:ss MM/dd/yyyy '), datetime(horzcat(modelFits45Win24.windowE),'InputFormat','HH:mm:ss MM/dd/yyyy '));
+clust30Win24=clusterFits(modelFits30Win24, 'Delta=30min, fit window=120min',3,1,0);
+clust30Win36=clusterFits(modelFits30Win36, 'Delta=30min, fit window=180min',3,2,0);
+clust30Win60=clusterFits(modelFits30Win60, 'Delta=30min, fit window=300min',2,3,0);
 
-allfitsnan=vertcat(vertcat(modelFits30Win36.Fits));
-allfitsTimeS=datetime(horzcat(modelFits30Win36.windowS),'InputFormat','HH:mm:ss MM/dd/yyyy ');
-allfitsTimeE=datetime(horzcat(modelFits30Win36.windowE),'InputFormat','HH:mm:ss MM/dd/yyyy ');
+clust45Win24=clusterFits(modelFits45Win24, 'Delta=45min, fit window=120min',3,4,0);
+clust45Win36=clusterFits(modelFits45Win36, 'Delta=45min, fit window=180min',3,5,0);
+clust45Win60=clusterFits(modelFits45Win60, 'Delta=45min, fit window=300min',2,6,0);
 
+clust60Win36=clusterFits(modelFits60Win36, 'Delta=60min, fit window=180min',3,7,0);
+clust60Win60=clusterFits(modelFits60Win60, 'Delta=60min, fit window=300min',2,8,0);
 
-allfits=~isnan(allfitsnan);
-sSize=allfitsTimeS.Hour;
-eSize=allfitsTimeE.Hour;
-morn=find(sSize<=12);
-morn2=find(eSize<=12);
-sSize(morn)=sSize(morn)+24;
-eSize(morn2)=eSize(morn2)+24;
-
-figure(101)
-scatter3(allfitsnan(allfits(:,1),1),allfitsnan(allfits(:,2),2),allfitsnan(allfits(:,3),3))
-xlabel('a(1)')
-ylabel('a(2)')
-zlabel('a(3)')
-title('Clustering of all parameter fits for 30win24')
-colorbar
-
-% figure(102)
-A=allfitsnan(allfits(:,1),1);
-B=allfitsnan(allfits(:,2),2);
-C=allfitsnan(allfits(:,3),3);
-% plot(allfitsnan(allfits(:,1),1).*allfitsnan(allfits(:,2),2),allfitsnan(allfits(:,3),3),'o')
-
-%find clusters
-Xa1=[sSize',A];
-
-opts = statset('Display','final');
-[idx,Csa1] = kmeans(Xa1,3,'Distance','cityblock',...
-    'Replicates',8,'Options',opts);
-
-figure(102)
-subplot(2,1,1)
-plot(Xa1(idx==1,1),Xa1(idx==1,2),'r.','MarkerSize',12)
-hold on
-plot(Xa1(idx==2,1),Xa1(idx==2,2),'b.','MarkerSize',12)
-plot(Xa1(idx==3,1),Xa1(idx==3,2),'g.','MarkerSize',12)
-plot(Csa1(:,1),Csa1(:,2),'kx',...
-     'MarkerSize',15,'LineWidth',3)
-legend('Cluster 1','Cluster 2','Cluster 3','Centroids',...
-       'Location','NW')
-title 'Cluster Assignments and Centroids'
-xlabel('time, hrs')
-ylabel('a(1)')
-hold off
-%
-Xa2=[sSize',B];
-
-opts = statset('Display','final');
-[idx,Csa2] = kmeans(Xa2,3,'Distance','cityblock',...
-    'Replicates',8,'Options',opts);
-
-figure(102)
-subplot(2,1,2)
-plot(Xa2(idx==1,1),Xa2(idx==1,2),'r.','MarkerSize',12)
-hold on
-plot(Xa2(idx==2,1),Xa2(idx==2,2),'b.','MarkerSize',12)
-plot(Xa2(idx==3,1),Xa2(idx==3,2),'g.','MarkerSize',12)
-plot(Csa2(:,1),Csa2(:,2),'kx',...
-     'MarkerSize',15,'LineWidth',3)
-legend('Cluster 1','Cluster 2','Cluster 3','Centroids',...
-       'Location','NW')
-title 'Cluster Assignments and Centroids'
-xlabel('time, hrs')
-ylabel('a(2)')
-hold off
-% find distributions
-a1BEG=fitdist(Xa1(idx==1,2),'Normal');
-a1MID=fitdist(Xa1(idx==3,2),'Normal');
-a1END=fitdist(Xa1(idx==2,2),'Normal');
-
-figure(100)
-subplot(2,3,1)
-histfit(Xa1(idx==1,2),200)
-subplot(2,3,2)
-histfit(Xa1(idx==2,2),200)
-subplot(2,3,3)
-histfit(Xa1(idx==3,2),200)
-
-%determine if two datasets come from the same distribution - based on the clustering between a1 and time -- if true, null
-%hypothesis is rejected - ksp will print what the actual alpha is
-[a13ksh, a13ksp]=kstest2(Xa1(idx==1,2),Xa1(idx==3,2),'Alpha',.35);
-[a12ksh, a12ksp]=kstest2(Xa1(idx==1,2),Xa1(idx==2,2),'Alpha',.35);
-[a23ksh, a23ksp]=kstest2(Xa1(idx==2,2),Xa1(idx==3,2),'Alpha',.35);
-
-%plot clusters in 3d
-INDEX3D=ones(length(A),1);
-INDEX3D(find(Xa2(idx==1,1)))=.2;
-INDEX3D(find(Xa2(idx==2,1)))=4;
-
-figure(103)
-scatter3(A,B,C,sSize,INDEX3D)
-xlabel('a(1)')
-ylabel('a(2)')
-zlabel('a(3)')
-title('Clustering of all parameter fits for 30win24')
+clust120Win60=clusterFits(modelFits120Win60, 'Delta=120min, fit window=300min',2,9,0);
 
 
-%method 2 for clustering
-clear AA
-AA=clusterdata([A,B,C],'criterion','distance','linkage','ward','maxclust',3); %ward is inner squared distance
-figure(104)
-scatter3(A,B,C,sSize,AA,'filled')
-xlabel('a(1)')
-ylabel('a(2)')
-zlabel('a(3)')
-title('Clustering of all parameter fits for 30win24')
+%bootstrap sample x1000 and see if mean changes
+%btstrpMeans=mean(bootstrp(1000,@mean,[A,B,C]));
 
-figure(105)
-subplot(3,3,1)
-scatter3(A,B,sSize)
-subplot(3,3,2)
-plot(sSize,A,'o')
-subplot(3,3,3)
-plot(sSize,B,'o')
-subplot(3,3,4)
-scatter3(A,B,eSize)
-subplot(3,3,5)
-plot(eSize,A,'o')
-subplot(3,3,6)
-plot(eSize,B,'o')
-subplot(3,3,7)
-plot(sSize,C,'o')
-subplot(3,3,8)
-plot(eSize,C,'o')
+
 
 %% sensitivity analysis
 i=167;
