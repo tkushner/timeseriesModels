@@ -48,10 +48,9 @@ if numclust==3
     plot(Csa1(:,1),Csa1(:,2),'kx',...
         'MarkerSize',15,'LineWidth',3)
     legend('Cluster 1','Cluster 2','Cluster 3','Centroids','Location','NW')
-    %legend('Cluster 1','Cluster 2','Centroids','Location','NW')
-    title(strcat({'Cluster Assignments and Centroids for '},datadef))
-    xlabel('time, hrs')
-    ylabel('a(1)')
+    title(strcat({'Cluster Assignments and Centroids for '},datadef),'FontSize',16)
+    xlabel('time, hrs','FontSize',14)
+    ylabel('a(1)','FontSize',14)
     hold off
     %
     Xa2=[sSize',B];
@@ -69,10 +68,9 @@ if numclust==3
     plot(Csa2(:,1),Csa2(:,2),'kx',...
         'MarkerSize',15,'LineWidth',3)
     legend('Cluster 1','Cluster 2','Cluster 3','Centroids','Location','NW')
-    %legend('Cluster 1','Cluster 2','Centroids','Location','NW')
-    title(strcat({'Cluster Assignments and Centroids for '},datadef))
-    xlabel('time, hrs')
-    ylabel('a(2)')
+    title(strcat({'Cluster Assignments and Centroids for '},datadef),'FontSize',16)
+    xlabel('time, hrs','FontSize',14)
+    ylabel('a(2)','FontSize',14)
     hold off
     % find distributions
     a1clust1=fitdist(Xa1(idxa1==1,2),'Normal');
@@ -96,7 +94,19 @@ if numclust==3
     clust1mean=mean([A(idxa1==1), B(idxa1==1), C(idxa1==1)]);
     clust2mean=mean([A(idxa1==2), B(idxa1==2), C(idxa1==2)]);
     clust3mean=mean([A(idxa1==3), B(idxa1==3), C(idxa1==3)]);
-
+    
+    clust1std=std([A(idxa1==1), B(idxa1==1), C(idxa1==1)]);
+    clust2std=std([A(idxa1==2), B(idxa1==2), C(idxa1==2)]);
+    clust3std=std([A(idxa1==3), B(idxa1==3), C(idxa1==3)]);
+    
+    clust1mean2=mean([A(idxa2==1), B(idxa2==1), C(idxa2==1)]);
+    clust2mean2=mean([A(idxa2==2), B(idxa2==2), C(idxa2==2)]);
+    clust3mean2=mean([A(idxa2==3), B(idxa2==3), C(idxa2==3)]);
+    
+    clust1std2=std([A(idxa2==1), B(idxa2==1), C(idxa2==1)]);
+    clust2std2=std([A(idxa2==2), B(idxa2==2), C(idxa2==2)]);
+    clust3std2=std([A(idxa2==3), B(idxa2==3), C(idxa2==3)]);
+    
 elseif numclust==2
     Xa1=[sSize',A];
     
@@ -112,9 +122,9 @@ elseif numclust==2
     plot(Csa1(:,1),Csa1(:,2),'kx',...
         'MarkerSize',15,'LineWidth',3)
     legend('Cluster 1','Cluster 2','Centroids','Location','NW')
-    title(strcat({'Cluster Assignments and Centroids for '},datadef))
-    xlabel('time, hrs')
-    ylabel('a(1)')
+    title(strcat({'Cluster Assignments and Centroids for '},datadef),'FontSize',16)
+    xlabel('time, hrs','FontSize',14)
+    ylabel('a(1)','FontSize',14)
     hold off
     %
     Xa2=[sSize',B];
@@ -132,9 +142,9 @@ elseif numclust==2
     plot(Csa2(:,1),Csa2(:,2),'kx',...
         'MarkerSize',15,'LineWidth',3)
     legend('Cluster 1','Cluster 2','Centroids','Location','NW')
-    title(strcat({'Cluster Assignments and Centroids for '},datadef))
-    xlabel('time, hrs')
-    ylabel('a(2)')
+    title(strcat({'Cluster Assignments and Centroids for '},datadef),'FontSize',16)
+    xlabel('time, hrs','FontSize',14)
+    ylabel('a(2)','FontSize',14)
     hold off
     % find distributions
     a1clust1=fitdist(Xa1(idxa1==1,2),'Normal');
@@ -151,6 +161,15 @@ elseif numclust==2
     
     clust1mean=mean([A(idxa1==1), B(idxa1==1), C(idxa1==1)]);
     clust2mean=mean([A(idxa1==2), B(idxa1==2), C(idxa1==2)]);
+    
+    clust1std=std([A(idxa1==1), B(idxa1==1), C(idxa1==1)]);
+    clust2std=std([A(idxa1==2), B(idxa1==2), C(idxa1==2)]);
+    
+    clust1mean2=mean([A(idxa2==1), B(idxa2==1), C(idxa2==1)]);
+    clust2mean2=mean([A(idxa2==2), B(idxa2==2), C(idxa2==2)]);
+    
+    clust1std2=std([A(idxa2==1), B(idxa2==1), C(idxa2==1)]);
+    clust2std2=std([A(idxa2==2), B(idxa2==2), C(idxa2==2)]);
 end
 
 
@@ -223,13 +242,21 @@ end
 
 clusterdata.numclust=numclust;
 if numclust==3
-    clusterdata.means=vertcat(clust1mean, clust2mean, clust3mean);
+    clusterdata.a1means=vertcat(clust1mean, clust2mean, clust3mean);
+    clusterdata.a1std=vertcat(clust1std, clust2std, clust3std);
     clusterdata.a1pvals=horzcat(a12ksp,a23ksp,a13ksp);
+    
+    clusterdata.a2means=vertcat(clust1mean2, clust2mean2, clust3mean2);
+    clusterdata.a2std=vertcat(clust1std2, clust2std2, clust3std2);
     clusterdata.a2pvals=horzcat(a12ksp2,a23ksp2, a13ksp2);
     clusterdata.pvalsdesc='12 23 13';
 elseif numclust==2
-    clusterdata.means=vertcat(clust1mean, clust2mean);
+    clusterdata.a1means=vertcat(clust1mean, clust2mean);
+    clusterdata.a1std=vertcat(clust1std, clust2std);
     clusterdata.a1pvals=a12ksp;
+
+    clusterdata.a2means=vertcat(clust1mean2, clust2mean2);
+    clusterdata.a2std=vertcat(clust1std2, clust2std2);
     clusterdata.a2pvals=a12ksp2;
     clusterdata.pvalsdesc='12';
 end

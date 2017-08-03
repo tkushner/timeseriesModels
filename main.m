@@ -688,6 +688,7 @@ ovlp=5;
 toc
 
 %% clustering
+clear clust3* clust4* clust6* clust1*
 
 clust30Win24=clusterFits(modelFits30Win24, 'Delta=30min, fit window=120min',3,1,0);
 clust30Win36=clusterFits(modelFits30Win36, 'Delta=30min, fit window=180min',3,2,0);
