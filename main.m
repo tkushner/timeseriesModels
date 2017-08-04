@@ -4,7 +4,6 @@
 
 %turn off the beeping
 beep off 
-cd ./timeseriesModels
 
 %pull all files for given patient
 allfiles=dir('../outputs/byPatient/session-PSO3-001-*');
@@ -707,6 +706,31 @@ clust120Win60=clusterFits(modelFits120Win60, 'Delta=120min, fit window=300min',2
 %bootstrap sample x1000 and see if mean changes
 %btstrpMeans=mean(bootstrp(1000,@mean,[A,B,C]));
 
+%% calculate residuals for clusters
+MAX=657;
+%for 30win
+gDelta=6;
+iDelta=6;
+
+Early=[0.3989, 0.6483, -3.8070];
+Mid=[0.4776, 0.5738, -3.4145];
+Late=[0.4464, 0.5802, -3.2218];
+M= 25;
+L=28;
+[clustData30win120, clustStats30Win120]= calcClustData(Early, Mid, Late, gDelta, iDelta, patient, MAX,M,L,3);
+
+Early=[0.1917, 0.8323, -4.2160];
+Mid=[0.2822, 0.7585, -3.7308];
+Late=[0.3094, 0.7107, -2.8973];
+M=24;
+L=27;
+[clustData30win180, clustStats30Win180]= calcClustData(Early, Mid, Late, gDelta, iDelta, patient, MAX,M,L,3);
+
+Early=[0.1015, 0.9285, -4.0174];
+Late=[0.1713, 0.8526, -3.5269];
+M=24;
+L=24;
+[clustData30win300, clustStats30Win300]= calcClustData(Early, [], Late, gDelta, iDelta, patient, MAX,M,L,2);
 
 
 %% sensitivity analysis
