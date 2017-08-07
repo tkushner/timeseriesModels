@@ -26,6 +26,7 @@ modelFits(MAX).STD=[];
 modelFits(MAX).predict=[];
 modelFits(MAX).windowS=cell(1,1);
 modelFits(MAX).windowE=cell(1,1);
+modelFits(MAX).allRES=[];
 
 %define windows for parsing & overlap (default: 300min (60 steps), 25min
 %overlap (5)
@@ -75,7 +76,7 @@ for i = 1:MAX
                 options = optimoptions('lsqlin','Algorithm','interior-point','display','off');
                 [x, ~, residual, ~, ~, ~]=lsqlin(A,B,[],[],[],[],lb,ub,a0,options);
                 modelFits(i).Fits(j,:)=x;
-                modelFits(i).RES=residual;
+                modelFits(i).RES(j,:)=residual;
                 modelFits(i).ResMin=min(modelFits(i).RES);
                 modelFits(i).ResMax=max(modelFits(i).RES);
                 modelFits(i).ResMean=nanmean(modelFits(i).RES);
@@ -109,10 +110,16 @@ for i=1:length(modelFits)
         x=[modelFits(i).MEAN(1); modelFits(i).MEAN(2); modelFits(i).MEAN(3)];
         modelFits(i).predict=A*x;
     end
+    modelFits(i).allRES=reshape(modelFits(i).RES,[1,numel(modelFits(i).RES)]);
+    if isnan(modelFits(i).allRES)
+        modelFits(i).allRES=[];
+    end
+    
 end
 %calculate stats
 [MEAN]=vertcat(modelFits(1:end).Fits);
-[RESES]=vertcat(modelFits(1:end).RES);
+[RESESall]=padcat(modelFits(1:end).allRES);
+RESES=reshape(RESESall,[1,numel(RESESall)]);
 stats.mean=nanmean(MEAN);
 stats.stdev=nanstd(MEAN);
 stats.RESmean=nanmean(RESES);

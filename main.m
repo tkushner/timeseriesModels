@@ -4,12 +4,14 @@
 
 %turn off the beeping
 beep off 
+clear patient
 
 %pull all files for given patient
-allfiles=dir('../outputs/byPatient/session-PSO3-001-*');
+allfiles=dir('../outputs/byPatient/session-PSO3-002-*');
 %how many are there
 numfiles=size(allfiles);
-MAX=657;
+%MAX=657; %pso3-001
+MAX=644; %pso3-002
 
 %Initialize patient struct for speed
 patient(MAX).SessionID=[];
@@ -602,7 +604,6 @@ toc
 
 %% Optimization by window
 tic 
-
 a0=[.6 .4 -2.5];
 lb = [0 0 -10];
 ub=[1.5 1.5 0];
@@ -654,11 +655,6 @@ ub=[1.5 1.5 0];
 gDelta=12;
 iDelta=12;
 
-stepsz=24;
-ovlp=5;
-[modelFits60Win24, stats60Win24] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
-
-
 stepsz=36;
 ovlp=5;
 [modelFits60Win36, stats60Win36] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
@@ -675,10 +671,6 @@ lb = [0 0 -50];
 ub=[1.5 1.5 0];
 gDelta=24;
 iDelta=24;
-stepsz=48;
-ovlp=5;
-
-[modelFits120Win48, stats120Win48] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
 
 stepsz=60;
 ovlp=5;
@@ -731,6 +723,34 @@ Late=[0.1713, 0.8526, -3.5269];
 M=24;
 L=24;
 [clustData30win300, clustStats30Win300]= calcClustData(Early, [], Late, gDelta, iDelta, patient, MAX,M,L,2);
+
+%for 45win
+gDelta=9;
+iDelta=9;
+
+Early=[0.35454, 0.5840, -9.9177];
+Mid=[0.6260, 0.5340, -13.2130];
+Late=[0.5726, 0.5499, -13.7511];
+M= 25;
+L=28;
+[clustData45win120, clustStats45Win120]= calcClustData(Early, Mid, Late, gDelta, iDelta, patient, MAX,M,L,3);
+
+Early=[0.4214, 0.6528, -8.7725];
+Mid=[0.4780, 0.6566, -13.1424];
+Late=[0.5016, 0.5913, -10.7349];
+M=24;
+L=27;
+[clustData45win180, clustStats45Win180]= calcClustData(Early, Mid, Late, gDelta, iDelta, patient, MAX,M,L,3);
+
+Early=[0.2647, 0.8029, -8.7574];
+Late=[0.3241, 0.7598, -10.2114];
+M=24;
+L=24;
+[clustData45win300, clustStats45Win300]= calcClustData(Early, [], Late, gDelta, iDelta, patient, MAX,M,L,2);
+
+%% new residual calc for clusters
+gDelta=6;
+iDelta=6;
 
 
 %% sensitivity analysis
