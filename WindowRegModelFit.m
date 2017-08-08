@@ -129,6 +129,7 @@ stats.RESmin=min(RESES);
 stats.RES95=1.96*stats.RESstdev;
 stats.AbsMIN=min(abs(RESES));
 stats.AbsMEAN=nanmean(abs(RESES));
+stats.AbsMAX=max(abs(stats.RESmax),abs(stats.RESmin));
 stats.AbsSTD=nanstd(abs(RESES));
 stats.Abs95=1.96*stats.AbsSTD;
 end
