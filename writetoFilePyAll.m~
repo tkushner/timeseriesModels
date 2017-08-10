@@ -1,0 +1,11 @@
+function [] = writetoFilePyAll(fitID,pID,modelfits,delta,wind)
+
+
+fileID=fopen(strcat(pID,'-',fitID,'_pyInputs.txt'),'a');
+
+
+fprintf(fileID,'%8s %.4f %3s %.4f %3s %.4f %3s %d %3s %d %3s %.4f %3s %.4f %3s %.4f %3s\n', ... 
+    'self.add_glucose_equation(', modelfits.mean(1), ',', modelfits.mean(2), ',', modelfits.mean(3), ',', ... 
+    delta, ',', delta, ',', -1*modelfits.RES95, ',', modelfits.RES95, ',', modelfits.RESmean,')');
+fclose(fileID);
+end

@@ -101,14 +101,17 @@ for i = 1:MAX
     
 end
 for i=1:length(modelFits)
+    dim=size(modelFits(i).Fits);
     %check if empty
     if isempty(modelFits(i).Fits)
         modelFits(i).Fits=nan(1,3);
-        modelFits(i).RES=nan(1);
+        modelFits(i).RES=nan(1,stepsz-2*delta+3);
     else
-        A=[patient(i).gCGM(1:end-2*gDelta), patient(i).gCGM(gDelta+1:end-gDelta), patient(i).gIOB(1:end-2*iDelta)];
-        x=[modelFits(i).MEAN(1); modelFits(i).MEAN(2); modelFits(i).MEAN(3)];
-        modelFits(i).predict=A*x;
+        for n=1:dim(1)
+            A=[patient(i).gCGM(1:end-2*gDelta), patient(i).gCGM(gDelta+1:end-gDelta), patient(i).gIOB(1:end-2*iDelta)];
+            x=[modelFits(i).Fits(n,1); modelFits(i).Fits(n,2); modelFits(i).Fits(n,3)];
+            modelFits(i).predict(n,:)=A*x;
+        end
     end
     modelFits(i).allRES=reshape(modelFits(i).RES,[1,numel(modelFits(i).RES)]);
     if isnan(modelFits(i).allRES)

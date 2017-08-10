@@ -59,7 +59,7 @@ toc
 %% Optimization by window
 tic 
 a0=[.6 .4 -2.5];
-lb = [0 0 -10];
+lb = [0 0 -100];
 ub=[1.5 1.5 0];
 gDelta=6;
 iDelta=6;
@@ -77,14 +77,10 @@ stepsz=60;
 ovlp=5;
 [modelFits30Win60, stats30Win60] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
 
-writetoFileTex('30Win24',pID,stats30Win24);
-writetoFileTex('30Win36',pID,stats30Win36);
-writetoFileTex('30Win60',pID,stats30Win60);
-
 % 45min
 
 a0=[.6 .4 -10];
-lb = [0 0 -50];
+lb = [0 0 -100];
 ub=[1.5 1.5 0];
 gDelta=9;
 iDelta=9;
@@ -103,14 +99,10 @@ stepsz=60;
 ovlp=5;
 [modelFits45Win60, stats45Win60] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
 
-writetoFileTex('45Win24',pID,stats45Win24);
-writetoFileTex('45Win36',pID,stats45Win36);
-writetoFileTex('45Win60',pID,stats45Win60);
-
 % 60min
 
 a0=[.6 .4 -10];
-lb = [0 0 -50];
+lb = [0 0 -100];
 ub=[1.5 1.5 0];
 gDelta=12;
 iDelta=12;
@@ -124,13 +116,10 @@ stepsz=60;
 ovlp=5;
 [modelFits60Win60, stats60Win60] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
 
-writetoFileTex('60Win36',pID,stats60Win36);
-writetoFileTex('60Win60',pID,stats60Win60);
-
 %120min
 
 a0=[.6 .4 -10];
-lb = [0 0 -50];
+lb = [0 0 -100];
 ub=[1.5 1.5 0];
 gDelta=24;
 iDelta=24;
@@ -139,5 +128,53 @@ stepsz=60;
 ovlp=5;
 
 [modelFits120Win60, stats120Win60] = WindowRegModelFit(a0,lb,ub,gDelta,iDelta,patient,MAX,stepsz,ovlp);
-writetoFileTex('120Win60',pID,stats120Win60);
 toc
+
+%% write to txt for tex
+% writetoFileTex('30Win24',pID,stats30Win24);
+% writetoFileTex('30Win36',pID,stats30Win36);
+% writetoFileTex('30Win60',pID,stats30Win60);
+% writetoFileTex('45Win24',pID,stats45Win24);
+% writetoFileTex('45Win36',pID,stats45Win36);
+% writetoFileTex('45Win60',pID,stats45Win60);
+% writetoFileTex('60Win36',pID,stats60Win36);
+% writetoFileTex('60Win60',pID,stats60Win60);
+% writetoFileTex('120Win60',pID,stats120Win60);
+% %% write to txt for python
+% writetoFilePy('delta30Win24',pID,stats30Win24,30,120)
+% writetoFilePy('delta45Win24',pID,stats45Win24,45,120)
+% 
+% writetoFilePy('delta30Win36',pID,stats30Win36,30,180)
+% writetoFilePy('delta45Win36',pID,stats45Win36,45,180)
+% writetoFilePy('delta60Win36',pID,stats60Win36,60,180)
+% 
+% writetoFilePy('delta30Win60',pID,stats30Win60,30,300)
+% writetoFilePy('delta45Win60',pID,stats45Win60,45,300)
+% writetoFilePy('delta60Win60',pID,stats60Win60,60,300)
+% writetoFilePy('delta120Win60',pID,stats120Win60,120,300)
+
+writetoFilePy('120minWindow',pID,stats30Win24,30,120)
+writetoFilePy('120minWindow',pID,stats45Win24,45,120)
+
+writetoFilePy('180minWindow',pID,stats30Win36,30,180)
+writetoFilePy('180minWindow',pID,stats45Win36,45,180)
+writetoFilePy('180minWindow',pID,stats60Win36,60,180)
+
+writetoFilePy('300minWindow',pID,stats30Win60,30,300)
+writetoFilePy('300minWindow',pID,stats45Win60,45,300)
+writetoFilePy('300minWindow',pID,stats60Win60,60,300)
+writetoFilePy('300minWindow',pID,stats120Win60,120,300)
+%%
+
+% writetoFilePyAll('120minWindow',pID,modelFits30Win24,stats30Win24,30)
+% writetoFilePyAll('120minWindow',pID,modelFits45Win24,stats45Win24,45)
+% 
+% writetoFilePyAll('180minWindow',pID,modelFits30Win36,stats30Win36,30)
+% writetoFilePyAll('180minWindow',pID,modelFits45Win36,stats45Win36,45)
+% writetoFilePyAll('180minWindow',pID,modelFits60Win36,stats60Win36,60)
+% 
+% writetoFilePyAll('300minWindow',pID,modelFits30Win60,stats30Win60,30)
+% writetoFilePyAll('300minWindow',pID,modelFits45Win60,stats45Win60,45)
+% writetoFilePyAll('300minWindow',pID,modelFits60Win60,stats60Win60,60)
+% writetoFilePyAll('300minWindow',pID,modelFits120Win60,stats120Win60,120)
+
