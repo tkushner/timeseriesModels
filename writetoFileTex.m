@@ -1,6 +1,6 @@
 function [] = writetoFileTex(fitID,pID,stats)
 
-fileID=fopen(strcat(pID,'_windowFits.txt'),'a');
+fileID=fopen(strcat(pID,'_clean_windowFits.txt'),'a');
 fprintf(fileID,'%12s\n',fitID);
 fprintf(fileID,'%8s %6s %6s %6s\n','parameter &', 'a1 &', 'a2 &', 'a3');
 fprintf(fileID,'%8s %.4f %3s %.4f %3s %.4f\n','mean & ',stats.mean(1),' & ',stats.mean(2),' & ',stats.mean(3));
